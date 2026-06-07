@@ -17,7 +17,9 @@ public class AiService {
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     // ─── SYSTEM PROMPT ─────────────────────────────────────────────────────
-    // Edit in AI_CONTEXT/3_ai_prompts.md, then paste final version here.
+    // AI Uzmanı bu prompt'u AI_CONTEXT/3_ai_prompts.md ve
+    // ai-specialist/PROMPT_GELISTIRME.md'de iterasyona tabi tutar,
+    // final hâlini buraya yapıştırır.
     private static final String SYSTEM_PROMPT = """
             You are a helpful AI assistant in a hackathon demo application.
 
@@ -75,17 +77,15 @@ public class AiService {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> contentList = (List<Map<String, Object>>) response.getBody().get("content");
-            String text = (String) contentList.get(0).get("text");
-            return objectMapper.readValue(text.trim(), AiResult.class);
+            String text = ((String) contentList.get(0).get("text")).trim();
 
+            // Bazen Claude markdown sarar — temizle
+            text = text.replaceAll("(?s)^```json\\s*", "").replaceAll("(?s)^```\\s*", "").replaceAll("\\s*```$", "");
+
+            return objectMapper.readValue(text, AiResult.class);
         } catch (Exception e) {
             System.err.println("[AiService] error: " + e.getMessage());
-            AiResult fallback = new AiResult();
-            fallback.setSummary("Analysis temporarily unavailable. Please try again.");
-            fallback.setInsights(List.of());
-            fallback.setScore(0);
-            fallback.setRecommendation("Retry in a few seconds.");
-            return fallback;
+            return AiResult.fallback();
         }
     }
 }

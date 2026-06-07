@@ -9,25 +9,25 @@
 ## 0. Senin Rolün — Özet
 
 Sen ekibin **yapay zeka beyni**sin. Görevin:
-- Claude'a "ne yapması gerektiğini" söyleyen **system prompt**'u yazmak
+- Claude'a "ne yapması gerektiğini" söyleyen **system prompt**'u yazmak (`AiService.SYSTEM_PROMPT`)
 - AI çıktısının her seferinde **doğru JSON formatında** gelmesini garanti etmek
 - Backend ve Frontend'in beklediği **veri sözleşmesini** tanımlamak
-- AI hata verirse **fallback yanıt** ile uygulamayı çalışır tutmak
+- AI hata verirse **fallback yanıt** (`AiResult.fallback()`) ile uygulamayı çalışır tutmak
 
-Kısaca: Backend "endpoint'i çalıştır" diyecek, sen onun çağıracağı fonksiyonun **mükemmel cevap döndürdüğünden** emin olacaksın.
+Kısaca: Backend "endpoint'i çalıştır" diyecek, sen onun çağıracağı metodun (`AiService.analyze`) **mükemmel cevap döndürdüğünden** emin olacaksın.
 
 ---
 
 ## 1. ORTAK: Proje Özeti
 
 4 saatlik AI hackathon. 4 kişilik ekip. Konu yarışma günü verilecek.
-Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic Claude.
+Boilerplate hazır → React frontend + Java Spring Boot backend + Anthropic Claude.
 
 **Tech Stack:**
-- **Backend:** Node.js 20 + Express (önerilen) veya Java 21 + Spring Boot
+- **Backend:** Java 21 + Spring Boot 3.2.5 + Maven
 - **Frontend:** React 18 + Vite + Tailwind CSS
 - **AI:** Anthropic Claude — `claude-sonnet-4-6` (senin yöneteceğin)
-- **DB:** SQLite (Node) veya H2 (Java) — sıfır config
+- **DB:** H2 in-memory + JdbcTemplate
 - **Git:** Her rol kendi branch'inde, FS yöneticisi merge'leri yapar
 
 ---
@@ -53,8 +53,8 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 | Rol | Sorumluluk | Dokunduğu |
 |-----|-----------|-----------|
-| **AI Uzmanı (sen)** | Prompt, aiService, çıktı sözleşmesi | `ai-specialist/`, `aiService.js`, `3_ai_prompts.md` |
-| **Backend** | Endpoint'ler, DB | `backend-node/src/routes/`, `services/` (AI dışı) |
+| **AI Uzmanı (sen)** | Prompt, AiService, çıktı sözleşmesi | `ai-specialist/`, `AiService.java`, `AiResult.java`, `3_ai_prompts.md` |
+| **Backend** | Endpoint'ler, DB, file upload | `ApiController.java`, `DbService.java`, `DocumentService.java` |
 | **Frontend** | UI | `frontend/src/` |
 | **FS Yöneticisi** | Git, merge, koordinasyon | Her yer (dikkatli) |
 
@@ -62,13 +62,17 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 ## 4. ORTAK: Bu Gece Yapılacaklar
 
-- [ ] Boilerplate'i clone'la, `cp .env.example .env` yap
-- [ ] `.env` içine `ANTHROPIC_API_KEY=sk-ant-...` yaz (FS Yöneticisi paylaşacak)
-- [ ] `cd backend-node && npm install && npm run dev` — başlatabildiğini doğrula
-- [ ] `curl -X POST localhost:3001/api/analyze -d '{"input":"test"}' -H "Content-Type: application/json"` — gerçek API'ye dokunduğunu gör
+- [ ] Boilerplate'i clone'la
+- [ ] `ANTHROPIC_API_KEY` env variable'ı set et (FS Yöneticisi anahtarı paylaşacak)
+  - Windows: `$env:ANTHROPIC_API_KEY="sk-ant-..."`
+  - Linux/Mac: `export ANTHROPIC_API_KEY=sk-ant-...`
+- [ ] `cd backend && mvn dependency:resolve` — Maven bağımlılıklarını önceden indir (~3-5 dk)
+- [ ] `mvn spring-boot:run` — başlatabildiğini doğrula, port 3001'de çalışıyor olmalı
+- [ ] `curl -X POST localhost:3001/api/analyze -d "{\"input\":\"test\"}" -H "Content-Type: application/json"` — gerçek API'ye dokunduğunu gör
+- [ ] Java 21 kurulu mu? `java -version` ile kontrol
 - [ ] Anthropic dokümantasyonunu hızlıca tara: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering
 - [ ] `ai-specialist/PROMPT_GELISTIRME.md` ve `AI_CIKTI_SOZLESMESI.md` dosyalarını gözden geçir
-- [ ] Cursor veya VS Code kurulu olsun — Claude'a prompt yazmak için
+- [ ] IDE setup: IntelliJ Community veya VS Code + Extension Pack for Java
 
 **API anahtarı kim açacak?** Takımda netleştir. Tek ortak anahtar = hız. Limit/güvenlik kaygısı varsa her kişi kendi anahtarını açar.
 
@@ -82,17 +86,14 @@ git clone https://github.com/TAKIM/REPO.git
 cd REPO
 git checkout feat/ai
 
-# .env'yi oluştur
-cp .env.example .env
-# .env dosyasını aç, ANTHROPIC_API_KEY'i yaz
+# API key set et
+$env:ANTHROPIC_API_KEY="sk-ant-..."   # PowerShell
+# veya: export ANTHROPIC_API_KEY=sk-ant-...
 
 # Backend'i ayağa kaldır
-cd backend-node
-npm install   # eğer dün npm install yapmadıysan
-npm run dev   # → port 3001'de çalışıyor olmalı
-
-# Başka terminal — health check
-curl http://localhost:3001/health
+cd backend
+mvn spring-boot:run
+# → port 3001'de çalışıyor olmalı, "Started HackathonApplication" mesajı görmelisin
 ```
 
 Backend ayakta, sen prompt yazmaya hazırsın.
@@ -103,13 +104,14 @@ Backend ayakta, sen prompt yazmaya hazırsın.
 
 ### Ana Görevler
 1. **AI Çıktı Sözleşmesi:** AI'ın döneceği JSON yapısını ilk 20 dakikada netleştir, ekiple paylaş
-2. **System Prompt:** `aiService.js`'deki `SYSTEM_PROMPT`'u yaz, iteratif geliştir
-3. **Test:** Her prompt versiyonunu `curl` ile test et
-4. **Fallback:** API hata verirse ne döneceğini netleştir
-5. **RAG:** Konu belge analizi gerektiriyorsa `RAG_KURULUM.md` rehberini uygula
+2. **System Prompt:** `AiService.SYSTEM_PROMPT` constant'ını yaz, iteratif geliştir
+3. **AiResult DTO:** Eğer şema değişirse `AiResult.java` alanlarını güncelle
+4. **Test:** Her prompt versiyonunu `curl` ile test et
+5. **Fallback:** `AiResult.fallback()` static method'unu güncel tut
+6. **RAG:** Konu belge analizi gerektiriyorsa `RAG_KURULUM.md` rehberini uygula
 
 ### Yan Görevler
-- Backend'in `aiService.js`'i doğru çağırıp çağırmadığını kontrol et
+- Backend'in `AiService`'i doğru çağırıp çağırmadığını kontrol et
 - Frontend'in AI çıktısının her alanını doğru render ettiğini gör
 - Jüri sunumunda AI tarafını anlat
 
@@ -118,16 +120,17 @@ Backend ayakta, sen prompt yazmaya hazırsın.
 ## 7. SENIN: Dokunduğun Dosyalar
 
 ```
-backend-node/src/services/aiService.js    ← Ana çalışma alanın
-ai-specialist/PROMPT_GELISTIRME.md        ← Prompt iterasyon defterin
-ai-specialist/AI_CIKTI_SOZLESMESI.md      ← Veri sözleşmesi (DOLDUR, EKİBE PAYLAŞ)
-ai-specialist/RAG_KURULUM.md              ← Gerekirse uygula
-AI_CONTEXT/3_ai_prompts.md                ← Prompt arşivi
+backend/src/main/java/com/hackathon/service/AiService.java   ← Ana çalışma alanın
+backend/src/main/java/com/hackathon/dto/AiResult.java        ← AI çıktı DTO (şema değişirse güncelle)
+ai-specialist/PROMPT_GELISTIRME.md                            ← Prompt iterasyon defterin
+ai-specialist/AI_CIKTI_SOZLESMESI.md                          ← Veri sözleşmesi (DOLDUR, EKİBE PAYLAŞ)
+ai-specialist/RAG_KURULUM.md                                  ← Gerekirse uygula
+AI_CONTEXT/3_ai_prompts.md                                    ← Prompt arşivi
 ```
 
 **Dokunmayacağın yerler:**
-- `backend-node/src/routes/api.js` (Backend'in)
-- `backend-node/src/services/dbService.js` (Backend'in)
+- `backend/src/main/java/com/hackathon/controller/` (Backend'in)
+- `backend/src/main/java/com/hackathon/service/DbService.java` (Backend'in)
 - `frontend/` (Frontend'in)
 
 İstisna: Backend tıkanırsa endpoint yazımına destek olabilirsin (kendi branch'inde değil, ona söyle).
@@ -163,19 +166,33 @@ REQUEST:
 
 RESPONSE.data:
 {
-  "score": integer 0-100,
   "summary": "1 cümle özet",
-  "verdict": "Onayla" veya "Reddet",
-  "details": ["string", "string"]
+  "insights": ["string", "string"],
+  "score": integer 0-100,
+  "recommendation": "string"
+}
+```
+
+**Eğer şema değiştiyse:** `backend/src/main/java/com/hackathon/dto/AiResult.java` dosyasını da güncelle. Örnek alan ekleme:
+
+```java
+@Data @NoArgsConstructor @JsonIgnoreProperties(ignoreUnknown = true)
+public class AiResult {
+    private String summary;
+    private List<String> insights;
+    private int score;
+    private String recommendation;
+    private String verdict;  // ← YENİ ALAN
+    ...
 }
 ```
 
 **Bildirim (kritik!):** Ekibe yüksek sesle veya WhatsApp'a yaz:
-> "Arkadaşlar, AI sözleşmesi hazır: `score, summary, verdict, details`. Backend ve Frontend buna göre kodlayın. `ai-specialist/AI_CIKTI_SOZLESMESI.md`'de detayı var."
+> "Arkadaşlar, AI sözleşmesi hazır: `summary, insights, score, recommendation`. AiResult DTO güncel. Backend ve Frontend buna göre kodlayın. `ai-specialist/AI_CIKTI_SOZLESMESI.md`'de detayı var."
 
 **Commit:**
 ```bash
-git add ai-specialist/AI_CIKTI_SOZLESMESI.md
+git add ai-specialist/AI_CIKTI_SOZLESMESI.md backend/src/main/java/com/hackathon/dto/AiResult.java
 git commit -m "feat(ai): output contract tanımlandı"
 git push
 ```
@@ -199,10 +216,10 @@ Your task: [GÖREV — örn: evaluate suitability for the [position] role].
 
 Respond ONLY with this exact JSON structure:
 {
-  "score": <integer 0-100>,
   "summary": "<one sentence>",
-  "verdict": "<Onayla | Reddet>",
-  "details": ["<string>", "<string>"]
+  "insights": ["<insight 1>", "<insight 2>"],
+  "score": <integer 0-100>,
+  "recommendation": "<clear next action>"
 }
 
 CRITICAL RULES:
@@ -211,19 +228,25 @@ CRITICAL RULES:
 - Respond in Turkish.
 ```
 
-**aiService.js'e yapıştır:**
+**AiService.java'ya yapıştır:**
 ```bash
-code backend-node/src/services/aiService.js
-# SYSTEM_PROMPT değişkenini yukarıdaki ile değiştir
+code backend/src/main/java/com/hackathon/service/AiService.java
+# SYSTEM_PROMPT text block'unu (""" ... """) yukarıdaki ile değiştir
 ```
 
-**Backend'i restart et** (npm run dev zaten watch mode'da olabilir, otomatik reload).
+**Backend'i restart et:**
+```bash
+# Terminal 1'de Ctrl+C, sonra:
+cd backend
+mvn spring-boot:run
+# Spring Boot DevTools eklendiyse otomatik restart olur
+```
 
 **Test (curl):**
 ```bash
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "Yasin, 5 yıl Java geliştirici, Spring Boot ve PostgreSQL biliyor"}'
+  -d "{\"input\": \"Yasin, 5 yıl Java geliştirici, Spring Boot ve PostgreSQL biliyor\"}"
 ```
 
 **Beklenen:**
@@ -231,10 +254,11 @@ curl -X POST http://localhost:3001/api/analyze \
 {
   "success": true,
   "data": {
-    "score": 75,
+    "id": 1,
     "summary": "...",
-    "verdict": "Onayla",
-    "details": [...]
+    "insights": [...],
+    "score": 75,
+    "recommendation": "..."
   }
 }
 ```
@@ -243,10 +267,11 @@ curl -X POST http://localhost:3001/api/analyze \
 - JSON parse hatası → System prompt'a "No markdown. No code fences." ekle
 - Türkçe yerine İngilizce dönüyor → "Respond in Turkish" ekle
 - Saçma cevap → Role tanımını güçlendir, örnek ekle
+- `set-via-env-var` yanıt geliyor → `ANTHROPIC_API_KEY` env variable yok, set et ve backend'i restart
 
 **Commit:**
 ```bash
-git add ai-specialist/ backend-node/src/services/aiService.js
+git add ai-specialist/ backend/src/main/java/com/hackathon/service/AiService.java
 git commit -m "feat(ai): v1 prompt - temel analiz"
 git push
 ```
@@ -278,21 +303,21 @@ Her testi `PROMPT_GELISTIRME.md` defterine kaydet (v2, v3, v4...).
    Do not include ```json or ``` markers.
    ```
 
-2. **Az-shot örnek ekle (token israfı ama tutarlılık artar):**
+2. **Few-shot örnek ekle (token israfı ama tutarlılık artar):**
    ```
    Example output:
-   {"score": 85, "summary": "Güçlü teknik beceri, liderlik eksik", "verdict": "Onayla", "details": ["..."]}
+   {"summary": "Güçlü teknik beceri, liderlik eksik", "insights": ["..."], "score": 85, "recommendation": "..."}
    ```
 
 3. **Edge case'leri açıkça yönet:**
    ```
    If the input is empty, irrelevant, or unclear:
-   {"score": 0, "summary": "Geçerli bir girdi sağlanmadı", "verdict": "Reddet", "details": []}
+   {"summary": "Geçerli bir girdi sağlanmadı", "insights": [], "score": 0, "recommendation": "Lütfen geçerli bir girdi sağlayın"}
    ```
 
 **Her büyük iyileştirme commit edilir:**
 ```bash
-git add ai-specialist/ backend-node/src/services/aiService.js
+git add ai-specialist/ backend/src/main/java/com/hackathon/service/AiService.java
 git commit -m "feat(ai): v2 prompt - JSON zorlama güçlendirildi"
 git push
 ```
@@ -307,17 +332,17 @@ git push
 # Final prompt'u PROMPT_GELISTIRME.md'de "AKTİF PROMPT" bölümüne yaz
 code ai-specialist/PROMPT_GELISTIRME.md
 
-# aiService.js'in bu versiyona uyumlu olduğunu doğrula
-code backend-node/src/services/aiService.js
+# AiService.java'nın bu versiyona uyumlu olduğunu doğrula
+code backend/src/main/java/com/hackathon/service/AiService.java
 ```
 
 **Uçtan uca test (Frontend → Backend → AI):**
 1. Frontend'i aç (http://localhost:5173)
 2. Gerçek bir girdi yaz, gönder
 3. Sonuç ekranda görünüyor mu?
-4. Tüm alanlar (score, summary, verdict, details) doğru gösteriliyor mu?
+4. Tüm alanlar (summary, insights, score, recommendation) doğru gösteriliyor mu?
 
-Sorun varsa: Frontend'in `HomePage.jsx`'e bak, AI'dan gelen alanı doğru kullanıyor mu?
+Sorun varsa: Frontend'in `HomePage.jsx`'ine bak, AI'dan gelen alanı doğru kullanıyor mu?
 
 **Final commit:**
 ```bash
@@ -341,7 +366,7 @@ git push
 >
 > AI mimarisinde 3 önemli karar aldık:
 > 1. **Yapısal JSON çıktı** — AI'ya cevabını kesin bir formatta vermesi için sıkı kurallar koyduk
-> 2. **Fallback mekanizması** — API yavaşlarsa veya hata verirse uygulamamız çökmüyor
+> 2. **Fallback mekanizması** — `AiResult.fallback()` ile API yavaşlarsa veya hata verirse uygulamamız çökmüyor
 > 3. **Prompt mühendisliği** — [domain]'e özel rol tanımıyla model performansını optimize ettik"
 
 #### Son Dakika Cilalama (DİKKATLİ!)
@@ -367,11 +392,9 @@ DO NOT use markdown formatting.
 DO NOT use code fences like ```json or ```.
 ```
 
-Veya `aiService.js`'de markdown'ı temizle:
-```javascript
-let text = message.content[0].text.trim();
-text = text.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-return JSON.parse(text);
+`AiService.callClaude()` zaten markdown'ı temizliyor:
+```java
+text = text.replaceAll("(?s)^```json\\s*", "").replaceAll("(?s)^```\\s*", "").replaceAll("\\s*```$", "");
 ```
 
 ---
@@ -381,16 +404,17 @@ return JSON.parse(text);
 **Belirti:**
 ```json
 {
-  "score": 85,
   "summary": "...",
+  "score": 85,
   "explanation": "Ekstra alan",  ← bunu istemiyorsun
-  "details": [...]
+  "insights": [...]
 }
 ```
 
-**Çözüm:** Frontend'i bozmaz çünkü sadece tanımlı alanları okur. Ama temizliği için:
+**Çözüm:** `AiResult` DTO'sunda `@JsonIgnoreProperties(ignoreUnknown = true)` zaten var — alakasız alanlar yutuluyor.
+Ama temizliği için prompt'a:
 ```
-Your response must contain EXACTLY these 4 keys: score, summary, verdict, details.
+Your response must contain EXACTLY these 4 keys: summary, insights, score, recommendation.
 Do not add any other keys.
 ```
 
@@ -398,18 +422,19 @@ Do not add any other keys.
 
 ### Hata 3: Token limiti aşımı (uzun çıktı)
 
-**Belirti:** Yanıt yarıda kesiliyor, JSON parse hatası.
+**Belirti:** Yanıt yarıda kesiliyor, JSON parse hatası, fallback dönüyor.
 
-**Çözüm:** `aiService.js`'de `max_tokens` değerini artır:
-```javascript
-max_tokens: 2048,  // 1024'ten 2048'e
+**Çözüm:** `application.yml`'de `anthropic.max-tokens`'ı artır:
+```yaml
+anthropic:
+  max-tokens: 2048   # 1024'ten 2048'e
 ```
 
 Veya prompt'a ekle:
 ```
 Keep "summary" under 200 characters.
-Keep each "details" item under 100 characters.
-Maximum 5 items in "details".
+Keep each "insights" item under 100 characters.
+Maximum 5 items in "insights".
 ```
 
 ---
@@ -418,25 +443,25 @@ Maximum 5 items in "details".
 
 **Belirti:**
 ```
-Error: 429 Too Many Requests
+[AiService] error: 429 Too Many Requests
 ```
 
 **Çözüm:**
 - Anthropic dashboard'da limit'i kontrol et
 - 1 dk bekle ve tekrar dene
 - Yedek API key'e geç (FS yöneticisinden iste)
-- `aiService.js`'de retry mekanizması:
-  ```javascript
-  async function callWithRetry(fn, retries = 2) {
-    try { return await fn(); }
-    catch (err) {
-      if (retries > 0 && err.status === 429) {
-        await new Promise(r => setTimeout(r, 2000));
-        return callWithRetry(fn, retries - 1);
+- `AiService.callClaude()`'a retry mekanizması:
+  ```java
+  for (int i = 0; i < 2; i++) {
+      try {
+          ResponseEntity<Map> response = restTemplate.postForEntity(...);
+          // ... process and return
+      } catch (HttpClientErrorException.TooManyRequests e) {
+          Thread.sleep(2000);
+          continue;
       }
-      throw err;
-    }
   }
+  return AiResult.fallback();
   ```
 
 ---
@@ -446,18 +471,40 @@ Error: 429 Too Many Requests
 **Çözüm:** System prompt'un en başına ve sonuna:
 ```
 You MUST respond entirely in Turkish (Türkçe).
-All field values (summary, verdict, details) must be in Turkish.
+All field values (summary, insights, recommendation) must be in Turkish.
 ```
 
 ---
 
-### Hata 6: aiService.js'de "ANTHROPIC_API_KEY undefined"
+### Hata 6: "set-via-env-var" yanıtı geliyor
+
+**Sebep:** `ANTHROPIC_API_KEY` env variable set edilmedi, `application.yml` default'u kullanılıyor.
 
 **Çözüm:**
-1. `backend-node/.env` dosyası var mı?
-2. İçinde `ANTHROPIC_API_KEY=sk-ant-...` doğru yazılmış mı? (tırnak yok, boşluk yok)
-3. `cp .env.example .env` yapıldı mı?
-4. Backend'i restart et (Ctrl+C, sonra `npm run dev`)
+1. Terminal'i kapat
+2. Env variable set et:
+   ```bash
+   $env:ANTHROPIC_API_KEY="sk-ant-..."   # PowerShell
+   ```
+3. **Aynı terminal'de** `mvn spring-boot:run` çalıştır
+
+---
+
+### Hata 7: AiService değişikliği reload olmuyor
+
+**Çözüm:** Spring Boot DevTools eklenmediyse her değişiklik için backend'i durdurup tekrar başlatman gerek.
+
+Pom.xml'e ekle (varsa atla):
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+Sonra IDE'de "Auto Build" / "Auto Compile" aç → değişikliklerde otomatik restart.
 
 ---
 
@@ -471,10 +518,10 @@ All field values (summary, verdict, details) must be in Turkish.
 
 2. **Edge case kontrolü**
    - Boş veya alakasız girdi ver → uygulama çökmüyor, anlamlı yanıt veriyor
-   - "Bakın, fallback mekanizmamız çalışıyor"
+   - "Bakın, `AiResult.fallback()` mekanizmamız çalışıyor"
 
 3. **Prompt mühendisliği**
-   - `aiService.js`'i aç, system prompt'u kısaca göster
+   - `AiService.java`'yı aç, `SYSTEM_PROMPT` text block'unu göster
    - "Buradaki rol tanımı ve sıkı JSON kuralları sayesinde tutarlı çıktı alıyoruz"
 
 ### Soru-cevap için hazırlık:
@@ -482,7 +529,7 @@ All field values (summary, verdict, details) must be in Turkish.
 - **"Neden bu model?"** → [Domain]'e uygun, hızlı, JSON çıktısı tutarlı
 - **"Maliyet?"** → Token başına çok düşük, hackathon için yeterli
 - **"Fine-tune yaptınız mı?"** → Hayır, sıfırdan eğitmek 4 saatte mümkün değil. Bunun yerine prompt mühendisliği ile model davranışını yönettik.
-- **"RAG kullandınız mı?"** → [Evet/Hayır, kullandıysan in-memory yaklaşım]
+- **"RAG kullandınız mı?"** → [Evet/Hayır, kullandıysan PDFBox + in-memory chunking yaklaşımı]
 
 ---
 
@@ -503,7 +550,7 @@ git checkout feat/ai
 git pull origin feat/ai
 
 # Çalışırken her ~30 dk
-git add ai-specialist/ backend-node/src/services/aiService.js
+git add ai-specialist/ backend/src/main/java/com/hackathon/service/AiService.java backend/src/main/java/com/hackathon/dto/AiResult.java
 git commit -m "feat(ai): [ne değişti]"
 git push
 
@@ -532,14 +579,14 @@ docs(ai): output contract güncellendi
 
 | Olay | Kime | Mesaj Örneği |
 |------|------|--------------|
-| AI sözleşmesi hazır | Backend, Frontend | "Sözleşme: score, summary, verdict, details — `AI_CIKTI_SOZLESMESI.md`" |
-| Sözleşme değişti | Backend, Frontend, FS | "Sözleşmeye `confidence` alanı ekledim — kontrol edin" |
+| AI sözleşmesi hazır | Backend, Frontend | "Sözleşme: summary, insights, score, recommendation — `AI_CIKTI_SOZLESMESI.md`. AiResult DTO da güncel." |
+| Sözleşme değişti | Backend, Frontend, FS | "Sözleşmeye `confidence` alanı ekledim, AiResult.java'da da var" |
 | v1 prompt çalıştı | Tüm ekip | "v1 hazır, curl ile test ettim, /api/analyze çalışıyor" |
 | Final prompt | FS | "AI branch merge için hazır" |
 | Tıkandım | Tüm ekip | "Token limiti aşımı var, prompt'u kısaltıyorum, 10 dk sürer" |
 
 ### Sana Bildirilenler
-- Backend: "POST /api/analyze çalışıyor mu test edebilir misin"
+- Backend: "AiService.analyze metodunu çağırıyorum, doğru mu?"
 - Frontend: "summary alanı bazen boş geliyor, bakar mısın"
 - FS: "Merge yapıyorum, 2 dk commit atma"
 
@@ -557,23 +604,17 @@ Her saat 2 dakika dur:
 **Çözüm:**
 - Status sayfasını kontrol et: status.anthropic.com
 - Yedek olarak OpenAI veya Gemini'ye hızlıca geç (varsa anahtarı)
-- `aiService.js`'i OpenAI SDK'ya çevir (10 dk):
-  ```bash
-  cd backend-node
-  npm install openai
-  ```
-  ```javascript
-  const OpenAI = require('openai');
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  // chat.completions.create({...})
-  ```
-- Son çare: Mock yanıt döndür (`aiService.js`'de hard-coded data), demo'da "AI offline" notu ile aç
+- `AiService.java`'yı yeniden HTTP endpoint'e göre yaz (~15 dk):
+  - OpenAI: `https://api.openai.com/v1/chat/completions`
+  - Authorization header: `Bearer sk-...`
+  - Body formatı farklı, dikkat et
+- Son çare: Mock yanıt döndür (`AiService.analyze()` içinde hard-coded `AiResult`), demo'da "AI offline" notu ile aç
 
 ### Senaryo 2: WiFi koptu
 **Çözüm:**
 - Telefon hotspot
 - Backend ve frontend offline çalışıyor (sadece AI çağrısı dış servis)
-- Mevcut açık AI yanıtları cache'lenmiş olabilir
+- H2 in-memory DB her şeyi tutmaya devam eder
 
 ### Senaryo 3: Laptop çöktü
 **Çözüm:**
@@ -583,13 +624,13 @@ Her saat 2 dakika dur:
 ### Senaryo 4: Prompt asla tutarlı çalışmıyor (saatler geçti)
 **Çözüm:**
 - MVP'yi daralt — daha basit bir çıktı şemasına dön
-- "summary" + "score" yeter, "details" gerekmez
-- Çalışmayan kısımları kaldır, çalışanı parlat
+- "summary" + "score" yeter, "insights" gerekmez
+- Çalışmayan kısımları AiResult'tan kaldır, çalışanı parlat
 
 ### Senaryo 5: Backend hiç çalışmıyor (Backend takıldı)
 **Çözüm:**
 - Backend'ciye yardıma git, kendi branch'ini bekleyebilir
-- Veya mock backend kur: aiService.js'i frontend'den direkt çağıracak şekilde refaktör et (son çare)
+- Çoğunlukla Maven dependency, port çakışması veya CORS sorunudur
 
 ---
 
@@ -598,11 +639,11 @@ Her saat 2 dakika dur:
 3:45'ten önce şunlar tamam olmalı:
 
 - [ ] `feat/ai` branch'in `main`'e merge edilmiş
-- [ ] `main` üzerinde son `aiService.js` çalışıyor
+- [ ] `main` üzerinde son `AiService.java` çalışıyor
 - [ ] `ai-specialist/AI_CIKTI_SOZLESMESI.md` final hâliyle commit edilmiş
 - [ ] `ai-specialist/PROMPT_GELISTIRME.md` final prompt yazılmış
 - [ ] Test girdileri ile uçtan uca akış başarılı
-- [ ] `.env` git'e gitmemiş (`.gitignore` zaten engelliyor ama kontrol et)
+- [ ] `application.yml` git'e gitmemiş eğer API key direkt yazıldıysa — ASLA
 - [ ] README'de "Kullanılan AI: Anthropic Claude" yazısı var (FS yazacak ama hatırlat)
 
 ### Senin son commit'in
@@ -617,18 +658,39 @@ git push origin feat/ai     # son push
 
 ## 15. Hızlı Referans — Kodlama Sırasında Sürekli Açık Tut
 
-### Anthropic SDK çağrısı (referans)
-```javascript
-const Anthropic = require('@anthropic-ai/sdk');
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+### Anthropic HTTP çağrısı (Java, referans)
+```java
+HttpHeaders headers = new HttpHeaders();
+headers.setContentType(MediaType.APPLICATION_JSON);
+headers.set("x-api-key", apiKey);
+headers.set("anthropic-version", "2023-06-01");
 
-const message = await client.messages.create({
-  model: 'claude-sonnet-4-6',
-  max_tokens: 1024,
-  system: SYSTEM_PROMPT,
-  messages: [{ role: 'user', content: userInput }],
-});
-const text = message.content[0].text;
+Map<String, Object> body = Map.of(
+    "model", "claude-sonnet-4-6",
+    "max_tokens", 1024,
+    "system", SYSTEM_PROMPT,
+    "messages", List.of(Map.of("role", "user", "content", userInput))
+);
+
+HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+ResponseEntity<Map> response = restTemplate.postForEntity(
+    "https://api.anthropic.com/v1/messages", request, Map.class
+);
+
+List<Map<String, Object>> contentList = (List<Map<String, Object>>) response.getBody().get("content");
+String text = ((String) contentList.get(0).get("text")).trim();
+```
+
+### Java text block (system prompt için)
+```java
+private static final String SYSTEM_PROMPT = """
+        You are an expert HR specialist.
+        Respond ONLY with JSON:
+        {
+          "summary": "...",
+          "score": 0-100
+        }
+        """;
 ```
 
 ### Test komutları
@@ -636,17 +698,24 @@ const text = message.content[0].text;
 # Hızlı test
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "test"}'
+  -d "{\"input\": \"test\"}"
 
 # Context ile (RAG)
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "test", "context": "ek belge metni"}'
+  -d "{\"input\": \"test\", \"context\": \"ek belge metni\"}"
+```
+
+### Backend restart
+```bash
+# Terminal'de Ctrl+C ile durdur
+cd backend
+mvn spring-boot:run
 ```
 
 ### `/ship` komutu (Claude Code kullanıyorsan)
 ```
-/ship aiService.js'e analyzeWithImage fonksiyonu ekle, görsel kabul eden Claude vision çağrısı yapacak
+/ship AiService.java'ya analyzeWithImage metodu ekle, görsel kabul eden Claude vision çağrısı yapacak
 ```
 4 agent (planner→coder→tester→reviewer) otomatik çalışır.
 

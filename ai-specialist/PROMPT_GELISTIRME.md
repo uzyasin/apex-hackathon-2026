@@ -3,10 +3,11 @@
 
 Bu dosyayı şu döngüyle kullan:
 1. Prompt taslağı yaz
-2. `curl` ile test et
-3. Sonucu buraya not al
-4. Düzelt, tekrar test et
-5. Bitti mi? Final prompt'u `aiService.js`'e kopyala
+2. `AiService.java`'daki `SYSTEM_PROMPT` constant'ına yapıştır (text block `"""..."""`)
+3. Backend'i restart et (`Ctrl+C` → `mvn spring-boot:run`)
+4. `curl` ile test et
+5. Sonucu buraya not al
+6. Düzelt, tekrar test et
 
 ---
 
@@ -28,13 +29,21 @@ Bu dosyayı şu döngüyle kullan:
 
 ## Hızlı Test Komutu
 
-Prompt'u `aiService.js`'e yapıştırdıktan sonra backend'i başlat ve test et:
+Prompt'u `AiService.SYSTEM_PROMPT`'a yapıştırdıktan sonra backend'i başlat ve test et:
 
 ```bash
+# Backend'i başlat (terminal 1)
+cd backend
+mvn spring-boot:run
+
+# Test et (terminal 2)
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "BURAYA TEST GİRDİSİ YAZ"}'
+  -d "{\"input\": \"BURAYA TEST GİRDİSİ YAZ\"}"
 ```
+
+> Spring Boot DevTools eklendiyse kod değişince otomatik restart olur.
+> Eklenmediyse her prompt değişiminde `Ctrl+C` → `mvn spring-boot:run` tekrar.
 
 ---
 
@@ -112,13 +121,20 @@ curl -X POST http://localhost:3001/api/analyze \
 
 ---
 
-## ✅ AKTİF PROMPT — aiService.js'e bu yapıştırıldı
+## ✅ AKTİF PROMPT — AiService.SYSTEM_PROMPT'a bu yapıştırıldı
 
 > Son güncelleme: ___:___
 
 **System Prompt (FINAL):**
 ```
-[BURAYA FINAL PROMPT'U YAZ — bunu aiService.js'deki SYSTEM_PROMPT'a kopyala]
+[BURAYA FINAL PROMPT'U YAZ — bunu AiService.java'daki SYSTEM_PROMPT text block'una kopyala]
+```
+
+**Java text block örneği:**
+```java
+private static final String SYSTEM_PROMPT = """
+        [FINAL PROMPT BURAYA]
+        """;
 ```
 
 **Onaylı test çıktısı:**
@@ -172,7 +188,8 @@ Jüri sunum öncesi bunları elle dene:
 **4. Token tasarrufu yap (hız için)**
 - System prompt 500 kelimeyi geçmesin
 - Kullanıcı mesajını gereksiz yere uzatma
-- `max_tokens` değerini `aiService.js`'de çıktı boyutuna göre ayarla:
+- `max_tokens` değerini `application.yml` veya `AiService.java`'da çıktı boyutuna göre ayarla:
   - Kısa JSON → 512
-  - Orta JSON → 1024
+  - Orta JSON → 1024 (default)
   - Uzun metin içeren → 2048
+- `application.yml` içinde: `anthropic.max-tokens: 1024`

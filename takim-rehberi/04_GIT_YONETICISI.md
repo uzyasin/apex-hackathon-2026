@@ -27,9 +27,10 @@ Sen olmadan ekip 4 saatte 4 farklı kod üretir; sayende 1 ürün olur.
 Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic Claude.
 
 **Tech Stack:**
-- **Backend:** Node.js 20 + Express (önerilen) veya Java 21 + Spring Boot
+- **Backend:** Java 21 + Spring Boot 3.2.5 + Maven (port 3001)
 - **Frontend:** React 18 + Vite + Tailwind CSS
 - **AI:** Anthropic Claude — `claude-sonnet-4-6`
+- **DB:** H2 in-memory + JdbcTemplate
 - **Git:** Her rol kendi branch'inde, sen merge'leri yapıyorsun
 
 ---
@@ -59,8 +60,8 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 | Rol | Sorumluluk | Dokunduğu |
 |-----|-----------|-----------|
-| **AI Uzmanı** | Prompt, aiService, çıktı sözleşmesi | `ai-specialist/`, `aiService.js` |
-| **Backend** | Endpoint'ler, DB | `backend-node/src/routes/`, `services/` (AI dışı) |
+| **AI Uzmanı** | Prompt, AiService, çıktı sözleşmesi | `ai-specialist/`, `AiService.java` |
+| **Backend** | Java endpoint'leri, DB, file upload | `backend/src/main/java/com/hackathon/` (AiService dışı) |
 | **Frontend** | UI | `frontend/src/` |
 | **FS Yöneticisi (sen)** | Git, merge, koordinasyon, destek | Her yer (ama dikkatli) |
 
@@ -104,9 +105,11 @@ git checkout -b feat/frontend && git push -u origin feat/frontend && git checkou
 ### C. Takım Testi (15 dk)
 Her takım üyesi:
 - [ ] Repo'yu clone'ladı mı?
-- [ ] `.env` oluşturdu mu?
-- [ ] Backend ayağa kalktı mı?
-- [ ] Frontend ayağa kalktı mı?
+- [ ] Java 21 ve Maven kurulu mu? (`java -version`, `mvn -version`)
+- [ ] `ANTHROPIC_API_KEY` env variable set ettirdi mi?
+- [ ] `cd backend && mvn dependency:resolve` yaptı mı? (yarışmada zaman kaybetmemek için)
+- [ ] Backend ayağa kalktı mı? (`mvn spring-boot:run`)
+- [ ] Frontend ayağa kalktı mı? (`npm install && npm run dev`)
 - [ ] `/api/analyze` test edildi mi?
 
 **Tamamlanmamış bir kişi varsa, yarışma günü zaman kaybedeceksiniz. Bu gece çözün.**
@@ -130,8 +133,10 @@ git checkout main
 git pull origin main
 
 # Backend ve Frontend'i ayağa kaldırıyorsun
-cd backend-node && npm install && npm run dev &
-cd ../frontend && npm install && npm run dev &
+# Terminal 1
+cd backend && mvn spring-boot:run
+# Terminal 2
+cd frontend && npm install && npm run dev
 ```
 
 Sonra ilk 30 dakikalık toplantıyı sen yönetiyorsun.
@@ -180,8 +185,8 @@ takim-rehberi/                      ← Bu klasörü update etmen gerekmiyor
 **main branch'ine sadece merge yaparak gir, direkt commit etme.**
 
 Diğer dosyalar — başkalarının. Ama destek için her yere bakabilirsin:
-- AI Uzmanı tıkandı → `aiService.js`'e bak, beraber çöz
-- Backend tıkandı → `api.js` veya `dbService.js`'e bak
+- AI Uzmanı tıkandı → `AiService.java`'ya bak, beraber çöz
+- Backend tıkandı → `ApiController.java` veya `DbService.java`'ya bak
 - Frontend tıkandı → `HomePage.jsx`'e bak
 
 ---
@@ -349,9 +354,9 @@ git pull origin main
 git merge feat/ai --no-ff -m "merge: ai specialist final"
 
 # Test: backend çalışıyor mu hâlâ?
-cd backend-node && npm run dev
+cd backend && mvn spring-boot:run
 # Başka terminal:
-curl -X POST localhost:3001/api/analyze -d '{"input":"test"}' -H "Content-Type: application/json"
+curl -X POST localhost:3001/api/analyze -d "{\"input\":\"test\"}" -H "Content-Type: application/json"
 # 200 dönüyorsa OK
 ```
 
@@ -418,10 +423,11 @@ code AI_CONTEXT/2_architecture.md
 git checkout main
 git pull origin main
 
-# Sıfır state'ten dene
-rm backend-node/hackathon.db   # eski DB'yi sil
-cd backend-node && npm install && npm run dev &
-cd ../frontend && npm install && npm run dev &
+# Sıfır state'ten dene (H2 in-memory, restart ile zaten sıfırlanır)
+# Terminal 1
+cd backend && mvn spring-boot:run
+# Terminal 2
+cd frontend && npm install && npm run dev
 ```
 
 #### Test Senaryoları (her birini elle yap)
@@ -465,17 +471,20 @@ git reset --hard HEAD~1   # son merge'i geri al
 ## 🚀 Çalıştırma
 
 ### Gereksinimler
+- Java 21
+- Maven 3.8+
 - Node.js 20+
 - Anthropic API anahtarı
 
 ### Adımlar
 \`\`\`bash
+# API anahtarını set et
+export ANTHROPIC_API_KEY=sk-ant-...    # Linux/Mac
+# Windows PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-..."
+
 # Backend
-cd backend-node
-cp .env.example .env
-# .env içine ANTHROPIC_API_KEY yaz
-npm install
-npm run dev
+cd backend
+mvn spring-boot:run
 
 # Frontend (başka terminal)
 cd frontend
@@ -494,9 +503,9 @@ npm run dev
 ## 📐 Mimari
 
 \`\`\`
-React (frontend) → Express (backend) → Anthropic API
+React (frontend) → Spring Boot (backend) → Anthropic API
                        ↓
-                   SQLite (DB)
+                   H2 in-memory (DB)
 \`\`\`
 
 ## 👥 Takım
@@ -684,7 +693,7 @@ main                           ← BURADA SEN MERGE EDERSIN
 ```
 
 ### Merge Sırası (Bağımlılığa Göre)
-1. AI (Backend'in çağırdığı `aiService.js`)
+1. AI (Backend'in çağırdığı `AiService.java`)
 2. Backend (Frontend'in çağırdığı endpoint'ler)
 3. Frontend (Backend'i kullanan UI)
 
@@ -778,12 +787,13 @@ git push origin main --force-with-lease   # collaborators'a haber ver!
 3:45'ten önce sen tek tek kontrol et:
 
 - [ ] `main` branch'i çalışıyor
-- [ ] `cd backend-node && npm install && npm run dev` sorunsuz
+- [ ] `cd backend && mvn spring-boot:run` sorunsuz
 - [ ] `cd frontend && npm install && npm run dev` sorunsuz
 - [ ] Tarayıcıda anasayfa açılıyor
 - [ ] Test girdisi gönderince sonuç dönüyor
 - [ ] README.md güncel ve detaylı
-- [ ] `.env` git'te değil (`.gitignore`'da `.env` var)
+- [ ] `ANTHROPIC_API_KEY` git'te değil (env variable kullanılıyor)
+- [ ] `application.yml`'de hardcoded API key yok
 - [ ] Tüm commit'ler push edilmiş (`git status` clean)
 - [ ] Tüm takım üyelerinin commit'i main'de var
 

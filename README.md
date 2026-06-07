@@ -1,117 +1,144 @@
 # Hackathon Boilerplate
 
-4-hour AI hackathon starter kit — React + (Node.js or Java Spring Boot) + Anthropic Claude.
+4 saatlik AI hackathon başlangıç kiti — Java Spring Boot + React + Anthropic Claude.
 
 ---
 
-## First 15 Minutes Checklist
+## İlk 15 Dakika Checklist
 
-- [ ] Copy `.env.example` → `.env` and fill `ANTHROPIC_API_KEY`
-- [ ] Fill `AI_CONTEXT/2_architecture.md` with product description and DB schema
-- [ ] Update `SKILLS.md` header with project name (optional)
-- [ ] Assign roles: AI Specialist / Backend / Frontend / Full-Stack Support
-- [ ] Decide backend: **Node.js** or **Java** (see below)
+- [ ] `ANTHROPIC_API_KEY` env variable'ı set et (aşağıdaki komut)
+- [ ] `AI_CONTEXT/2_architecture.md` dosyasını ürün açıklaması ve DB şeması ile doldur
+- [ ] `SKILLS.md` başlığına proje adını yaz (opsiyonel)
+- [ ] Rolleri ata: AI Uzmanı / Backend / Frontend / Git Yöneticisi
 
 ---
 
-## Quick Start
+## Hızlı Başlangıç
 
-### Option A — Node.js Backend
+### 1. Anthropic API Anahtarını Set Et
 
 ```bash
-cd backend-node
-cp .env.example .env   # fill ANTHROPIC_API_KEY
-npm install
-npm run dev            # runs on :3001
+# Windows PowerShell
+$env:ANTHROPIC_API_KEY="sk-ant-..."
+
+# Windows cmd
+set ANTHROPIC_API_KEY=sk-ant-...
+
+# Linux/Mac
+export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+### 2. Backend (Java Spring Boot)
+
+```bash
+cd backend
+mvn spring-boot:run
+# → http://localhost:3001 üzerinde çalışıyor
+```
+
+### 3. Frontend (React + Vite)
 
 ```bash
 cd frontend
 npm install
-npm run dev            # runs on :5173
+npm run dev
+# → http://localhost:5173 üzerinde çalışıyor
 ```
 
-### Option B — Java Spring Boot Backend
-
-```bash
-cd backend-java
-# Set ANTHROPIC_API_KEY as env var or edit application.yml
-mvn spring-boot:run    # runs on :3001
-```
-
-```bash
-cd frontend
-npm install
-npm run dev            # runs on :5173
-```
+Tarayıcıda `http://localhost:5173` aç.
 
 ---
 
-## Project Structure
+## Proje Yapısı
 
 ```
 .
 ├── .claude/
-│   ├── agents/         ← 4-agent pipeline (planner, coder, tester, reviewer)
-│   └── commands/       ← /ship slash command
-├── .pipeline/          ← Agent handoff files (auto-generated during /ship)
+│   ├── agents/             ← 4-agent pipeline (planner, coder, tester, reviewer)
+│   └── commands/           ← /ship slash command
+├── .pipeline/              ← Agent handoff dosyaları (otomatik oluşur)
 ├── AI_CONTEXT/
-│   ├── 1_system_rules.md   ← Coding standards for AI assistants
-│   ├── 2_architecture.md   ← ⚠️ FILL AT HACKATHON START
-│   └── 3_ai_prompts.md     ← Claude system prompts for the product
-├── SKILLS.md               ← Universal context — paste into any AI chat
-├── backend-node/           ← Express.js backend
-├── backend-java/           ← Spring Boot backend
+│   ├── 1_system_rules.md   ← AI araçları için kodlama standartları
+│   ├── 2_architecture.md   ← ⚠️ HACKATHON BAŞINDA DOLDUR
+│   └── 3_ai_prompts.md     ← Claude system prompt şablonları
+├── SKILLS.md               ← Universal AI context (herhangi bir AI chat'ine yapıştır)
+├── backend/                ← Java 21 + Spring Boot 3.x backend
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/hackathon/
+│       │   ├── HackathonApplication.java
+│       │   ├── controller/ApiController.java
+│       │   ├── service/  (AiService, DbService, DocumentService)
+│       │   ├── dto/      (ApiResponse, AnalyzeRequest, AiResult)
+│       │   └── config/   (CorsConfig, GlobalExceptionHandler)
+│       └── resources/application.yml
 └── frontend/               ← React + Vite + Tailwind
 ```
 
 ---
 
-## Using the 4-Agent Pipeline
+## 4-Agent Pipeline (Claude Code)
 
-In Claude Code terminal, trigger the full Planner→Coder→Tester→Reviewer chain:
+Claude Code terminalinde tam Planner→Coder→Tester→Reviewer zincirini tetikle:
 
 ```
-/ship add a file upload endpoint that extracts text and sends to Claude
+/ship file upload endpoint ekle, metin çıkarsın ve Claude'a göndersin
 ```
 
-The pipeline will:
-1. **Planner** writes a spec to `.pipeline/spec.md`
-2. **Coder** implements it and writes `.pipeline/changes.md`
-3. **Tester** writes + runs tests, writes `.pipeline/test-results.md`
-4. **Reviewer** gives a SHIP / NEEDS WORK / BLOCK verdict
+Pipeline:
+1. **Planner** spec yazar → `.pipeline/spec.md`
+2. **Coder** kodu yazar → `.pipeline/changes.md`
+3. **Tester** test yazar + çalıştırır → `.pipeline/test-results.md`
+4. **Reviewer** SHIP / NEEDS WORK / BLOCK verdict verir
 
-Pipeline pauses for OPEN QUESTIONS and test failures — always human-in-the-loop.
+OPEN QUESTIONS veya test hatası → pipeline durur, human-in-the-loop devam eder.
 
 ---
 
-## AI Context Files (for any AI tool)
+## AI Context Files (Herhangi Bir AI Tool için)
 
-When using ChatGPT, Copilot, or any other tool:
+ChatGPT, Copilot, Cursor veya başka bir tool kullanıyorsan:
 
-1. Open `SKILLS.md` and paste its content as the first message
-2. Say "Hazırım de" (or "Acknowledged")
-3. Start coding requests — the AI now knows your stack and rules
+1. `SKILLS.md` içeriğini ilk mesaj olarak yapıştır
+2. "Hazırım" cevabını al
+3. Kod istekleri yapmaya başla — AI stack'ini ve kurallarını biliyor
 
 ---
 
-## 4-Hour Time Budget
+## 4 Saatlik Zaman Bütçesi
 
-| Time | Activity |
+| Süre | Aktivite |
 |------|----------|
-| 0:00–0:30 | Fill architecture.md, assign tasks, /ship first skeleton feature |
-| 0:30–3:00 | Feature development via /ship pipeline |
-| 3:00–3:45 | Integration, end-to-end manual test |
-| 3:45–4:00 | Git push, update README with "how to run" |
+| 0:00–0:30 | architecture.md doldur, görev dağılımı, /ship ile ilk feature |
+| 0:30–3:00 | Feature geliştirme (/ship pipeline veya manuel) |
+| 3:00–3:45 | Entegrasyon, uçtan uca manuel test |
+| 3:45–4:00 | Git push, README'yi "nasıl çalıştırılır" ile güncelle |
 
 ---
 
-## API Contract
+## API Sözleşmesi
 
-All endpoints respond with:
+Tüm endpoint'ler bu formatta yanıt verir:
 ```json
 { "success": true, "data": { ... } }
-{ "success": false, "error": "message" }
+{ "success": false, "error": "mesaj" }
 ```
 
-Main endpoint: `POST /api/analyze` — `{ "input": "string", "context": "optional string" }`
+Endpoint'ler:
+- `GET /api/health` → durum kontrolü
+- `POST /api/analyze` → `{ "input": "string", "context": "opsiyonel" }` — ana AI çağrısı
+- `GET /api/results` → geçmiş analizler
+- `GET /api/results/{id}` → tek kayıt
+- `POST /api/upload` → multipart dosya yükleme (PDF/TXT/MD)
+
+---
+
+## H2 Database Console
+
+Geliştirme sırasında DB'yi browser üzerinden gör:
+```
+http://localhost:3001/h2-console
+JDBC URL: jdbc:h2:mem:hackathon
+Username: sa
+Password: (boş)
+```

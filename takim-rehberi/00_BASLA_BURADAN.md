@@ -8,8 +8,8 @@ Bu klasör, 4 kişilik takımın hackathonu kazanması için hazırlandı.
 
 | Rol | Dosya | İçerik |
 |-----|-------|--------|
-| **AI Model Uzmanı** | [`01_AI_UZMANI.md`](01_AI_UZMANI.md) | Prompt mühendisliği, aiService.js, çıktı sözleşmesi |
-| **Backend Geliştirici** | [`02_BACKEND.md`](02_BACKEND.md) | Endpoint'ler, veritabanı, API entegrasyonu |
+| **AI Model Uzmanı** | [`01_AI_UZMANI.md`](01_AI_UZMANI.md) | Prompt mühendisliği, AiService.java, çıktı sözleşmesi |
+| **Backend Geliştirici** | [`02_BACKEND.md`](02_BACKEND.md) | Java Spring Boot endpoint'leri, H2 DB, API entegrasyonu |
 | **Frontend Geliştirici** | [`03_FRONTEND.md`](03_FRONTEND.md) | UI, sayfalar, API client, kullanıcı akışı |
 | **Full-Stack & Git Yöneticisi** | [`04_GIT_YONETICISI.md`](04_GIT_YONETICISI.md) | Merge, koordinasyon, deploy, README |
 
@@ -70,22 +70,24 @@ Her takım üyesi kendi laptop'unda şunu test etsin:
 git clone https://github.com/TAKIM_ADI/REPO_ADI.git
 cd REPO_ADI
 
-# .env oluştur ve API anahtarını yapıştır
-cp .env.example .env
-# .env dosyasını aç → ANTHROPIC_API_KEY=sk-ant-... olarak doldur
+# Anthropic API anahtarını environment variable olarak set et
+# Windows PowerShell:
+$env:ANTHROPIC_API_KEY="sk-ant-..."
+# Linux/Mac:
+export ANTHROPIC_API_KEY=sk-ant-...
 
-# Backend test
-cd backend-node
-npm install
-npm run dev
+# Backend test (Java Spring Boot)
+cd backend
+mvn dependency:resolve   # dependency'leri önceden indir (~3-5 dk ilk seferde)
+mvn spring-boot:run
 # Başka terminalde:
 curl http://localhost:3001/health
-# → {"status":"ok",...} gelmeli
+# → {"success":true,"data":{"status":"ok"}} gelmeli
 
 # AI çağrısı test
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "merhaba"}'
+  -d "{\"input\": \"merhaba\"}"
 # → success: true ile JSON gelmeli
 
 # Frontend test
@@ -95,19 +97,20 @@ npm run dev
 # → Tarayıcıda http://localhost:5173 açılmalı
 ```
 
+**Java 21 ve Maven kurulu mu?** `java -version` ve `mvn -version` ile kontrol et.
+
 **Sorun yaşayan varsa şimdi çöz. Yarışma günü çözmeye çalışmak felaket olur.**
 
-### 5. Backend Seçimi (5 dk)
-İki backend hazır: Node.js (önerilen) ve Java Spring Boot.
-
-**Karar:**
-- AI hackathon → **Node.js** (anlık başlatma, AI SDK'ları hızlı)
-- Java şart ise → `backend-java/` kullan, ancak ek `mvn` deneyimi gerekir
+### 5. Java/Maven Hazırlığı (5 dk)
+Bu proje **Java 21 + Spring Boot 3.2.5** kullanır.
 
 **Aksiyon:**
-- [ ] Takım hangi backend'i kullanacağına karar versin
-- [ ] Karar `AI_CONTEXT/2_architecture.md` "Active Backend" alanına yazılacak (yarışma sabahı)
-- [ ] Java seçildiyse her kişi `mvn -v` ile Maven kurulumunu doğrulasın
+- [ ] Her ekip üyesi `java -version` → Java 21 olduğunu doğrulasın
+  - Yoksa: [adoptium.net](https://adoptium.net) → Temurin 21 LTS
+- [ ] Her ekip üyesi `mvn -version` → Maven 3.8+ olduğunu doğrulasın
+  - Yoksa: [maven.apache.org/download.cgi](https://maven.apache.org/download.cgi)
+- [ ] `cd backend && mvn dependency:resolve` ile bağımlılıkları önceden indirin (yarışmada zaman kaybetmeyin)
+- [ ] IDE setup: IntelliJ Community veya VS Code + Extension Pack for Java
 
 ### 6. İletişim Kanalı (5 dk)
 - [ ] WhatsApp grubu / Discord channel / Slack — hangisini kullanacaksınız?
@@ -142,14 +145,15 @@ Hepiniz birlikte konuyu okur, ürünü tartışır, MVP'yi netleştirirsiniz.
 
 #### T+0:15 — Backend mimarisini ve DB şemasını yazar
 `AI_CONTEXT/2_architecture.md`'ye:
-- Tablo: `analyses(id, cv_text, position, result_json, score, created_at)`
-- Endpoint: `POST /api/analyze { input, context }` ve `GET /api/results`
+- Tablo: `analyses(id, input, context, result_json, score, created_at)` — zaten boilerplate'te var
+- Ek tablo: `positions(id, title, requirements)` — yeni eklenecek
+- Endpoint: `POST /api/analyze`, `GET /api/results` zaten var; eklenecekler de yazılır
 
-**Bildirir:** "Mimari hazır, ben kodlamaya başlıyorum."
+**Bildirir:** "Mimari hazır, ben DbService'e yeni tablo ekleyip ApiController'a endpoint yazmaya başlıyorum."
 
 #### T+0:20 — Herkes kendi işine başlar (PARALEL)
-- **AI:** v1 prompt'unu yazar, `aiService.js`'e koyar, `curl` ile test eder
-- **Backend:** `dbService.js` kurar, ilk endpoint'i yazar
+- **AI:** v1 prompt'unu yazar, `AiService.SYSTEM_PROMPT`'a koyar, `curl` ile test eder
+- **Backend:** `DbService.init()`'e yeni tablo ekler, `ApiController.java`'ya endpoint yazar
 - **Frontend:** Mock veriyle UI'ı şekillendirir (`HomePage.jsx`)
 - **FS:** Herkesi kontrol eder, eksik var mı diye sorar
 
@@ -161,8 +165,8 @@ curl -X POST localhost:3001/api/analyze -d '{"input": "Yasin, 5 yıl Java"}'
 **Commit ve push:** `git commit -m "feat(ai): v1 prompt"`
 
 #### T+1:00 — Backend endpoint çalışıyor
-Backend, AI'nın hazır fonksiyonunu (`analyze()`) çağıran endpoint'i yazdı. Test geçti.
-**Bildirir:** "POST /api/analyze hazır. Frontend bağlanabilirsiniz."
+Backend, `AiService.analyze()` metodunu çağıran endpoint'i yazdı, DbService ile DB'ye kaydetti. Test geçti.
+**Bildirir:** "POST /api/analyze hazır, DB'ye kaydediyor. Frontend bağlanabilirsiniz."
 
 #### T+1:30 — Frontend mock'u kaldırır, gerçek API'ye bağlanır
 `HomePage.jsx`'teki `mockResult` yerine `const response = await analyze(input)` kodu girer.
@@ -236,8 +240,7 @@ hackathon/
 │   ├── PROMPT_GELISTIRME.md    ← Prompt iterasyon defteri
 │   ├── AI_CIKTI_SOZLESMESI.md  ← ⚠️ İLK 20 DAKİKADA DOLDUR
 │   └── RAG_KURULUM.md          ← Belge bağlama (gerekirse)
-├── backend-node/               ← Node.js + Express (önerilen)
-├── backend-java/               ← Java Spring Boot (alternatif)
+├── backend/                    ← Java 21 + Spring Boot 3.x
 ├── frontend/                   ← React + Vite + Tailwind
 ├── SKILLS.md                   ← AI araçlarına yapıştırılan bağlam
 ├── README.md                   ← Proje açıklaması

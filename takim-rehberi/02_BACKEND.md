@@ -1,6 +1,6 @@
 # ⚙️ Backend Geliştirici — Detaylı Rehber
 
-> Bu rehber **Backend Geliştirici** içindir.
+> Bu rehber **Backend Geliştirici (Java Spring Boot)** içindir.
 > Diğer roller: [AI Uzmanı](01_AI_UZMANI.md) · [Frontend](03_FRONTEND.md) · [Git Yöneticisi](04_GIT_YONETICISI.md)
 > Başlangıç: [00_BASLA_BURADAN.md](00_BASLA_BURADAN.md)
 
@@ -9,9 +9,9 @@
 ## 0. Senin Rolün — Özet
 
 Sen ekibin **motor odası**sın. Görevin:
-- Express API endpoint'lerini yazmak
-- Veritabanı (SQLite) tablolarını ve CRUD'u kurmak
-- AI Uzmanı'nın `aiService.js`'ini çağırıp veriyi DB'ye yazmak
+- Spring Boot REST endpoint'lerini yazmak (`ApiController.java`)
+- H2 in-memory DB tablolarını ve CRUD'u kurmak (`DbService.java`)
+- AI Uzmanı'nın `AiService`'ini çağırıp veriyi DB'ye yazmak
 - API'nin **çökmediğinden** ve **doğru JSON döndürdüğünden** emin olmak
 - Dosya upload, query parametreleri, validation gibi standart işleri halletmek
 
@@ -22,13 +22,17 @@ Kısaca: Frontend "şu endpoint'i çağıracağım" diyecek, sen onun beklediği
 ## 1. ORTAK: Proje Özeti
 
 4 saatlik AI hackathon. 4 kişilik ekip. Konu yarışma günü verilecek.
-Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic Claude.
+Boilerplate hazır → React frontend + Java Spring Boot backend + Anthropic Claude.
 
 **Tech Stack:**
-- **Backend:** Node.js 20 + Express (önerilen) veya Java 21 + Spring Boot
+- **Backend:** Java 21 + Spring Boot 3.2.5 + Maven
 - **Frontend:** React 18 + Vite + Tailwind CSS
 - **AI:** Anthropic Claude — `claude-sonnet-4-6` (AI Uzmanı yönetir)
-- **DB:** SQLite (Node) — `better-sqlite3` paketi, sıfır config
+- **DB:** H2 in-memory + JdbcTemplate (sıfır config)
+- **HTTP Client:** `RestTemplate` (Anthropic API'ye)
+- **PDF parsing:** Apache PDFBox 3.x
+- **Validation:** jakarta.validation
+- **Lombok:** DTO boilerplate
 - **Git:** Her rol kendi branch'inde, FS yöneticisi merge'leri yapar
 
 ---
@@ -43,8 +47,8 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 ```
 
 **Senin için kritik anlar:**
-- **0:20:** Architecture.md'ye DB şeması ve endpoint listesi yazılmış olmalı
-- **0:45:** DB tablosu çalışıyor, ilk basit endpoint hazır
+- **0:20:** `AI_CONTEXT/2_architecture.md`'ye DB şeması ve endpoint listesi yazılmış olmalı
+- **0:45:** Yeni DB tablosu (gerekirse) hazır, ilk endpoint çalışıyor
 - **1:30:** Ana endpoint (POST /api/analyze) tam çalışıyor, frontend bağlanabilir
 - **2:30:** Tüm endpoint'ler hazır, code freeze
 - **3:00:** Yeni endpoint yok, sadece bug fix
@@ -55,8 +59,8 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 | Rol | Sorumluluk | Dokunduğu |
 |-----|-----------|-----------|
-| **AI Uzmanı** | Prompt, aiService, çıktı sözleşmesi | `ai-specialist/`, `aiService.js` |
-| **Backend (sen)** | Endpoint'ler, DB | `backend-node/src/routes/`, `services/` (AI dışı) |
+| **AI Uzmanı** | Prompt, AiService, çıktı sözleşmesi | `ai-specialist/`, `AiService.java`, `AiResult.java` |
+| **Backend (sen)** | Endpoint'ler, DB, file upload | `ApiController.java`, `DbService.java`, `DocumentService.java`, yeni DTO'lar |
 | **Frontend** | UI | `frontend/src/` |
 | **FS Yöneticisi** | Git, merge, koordinasyon | Her yer (dikkatli) |
 
@@ -64,14 +68,21 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 ## 4. ORTAK: Bu Gece Yapılacaklar
 
-- [ ] Boilerplate'i clone'la, `cp backend-node/.env.example backend-node/.env` yap
-- [ ] `.env` içine `ANTHROPIC_API_KEY=sk-ant-...` yaz (FS Yöneticisi paylaşacak)
-- [ ] `cd backend-node && npm install` — bağımlılıkları indir (~2 dk)
-- [ ] `npm run dev` — başlatabildiğini doğrula, port 3001'de çalışıyor olmalı
-- [ ] `curl http://localhost:3001/health` — `{"status":"ok"}` gelmeli
-- [ ] `curl -X POST localhost:3001/api/analyze -d '{"input":"test"}' -H "Content-Type: application/json"` — AI gerçekten yanıt veriyor mu
-- [ ] SQLite hakkında biraz bilgi tazele: `better-sqlite3` sync API kullanır, kolay
-- [ ] **Java kullanılacaksa:** `cd backend-java && mvn dependency:resolve` — dependency'leri indir
+- [ ] Boilerplate'i clone'la
+- [ ] Java 21 kurulu mu? `java -version` ile kontrol
+  - Yoksa: [adoptium.net](https://adoptium.net) → Temurin 21 LTS
+- [ ] Maven kurulu mu? `mvn -version`
+  - Yoksa: [maven.apache.org](https://maven.apache.org/download.cgi)
+- [ ] `ANTHROPIC_API_KEY` env variable set et (FS Yöneticisi paylaşacak)
+  - Windows PowerShell: `$env:ANTHROPIC_API_KEY="sk-ant-..."`
+  - Linux/Mac: `export ANTHROPIC_API_KEY=sk-ant-...`
+- [ ] `cd backend && mvn dependency:resolve` — Bağımlılıkları önceden indir (~3-5 dk ilk seferde)
+- [ ] `mvn spring-boot:run` — Başlatabildiğini doğrula
+- [ ] `curl http://localhost:3001/health` → `{"success":true,"data":{"status":"ok"}}` gelmeli
+- [ ] `curl -X POST localhost:3001/api/analyze -d "{\"input\":\"test\"}" -H "Content-Type: application/json"` — AI yanıt veriyor mu
+- [ ] H2 Console'u tanı: http://localhost:3001/h2-console (JDBC URL: `jdbc:h2:mem:hackathon`)
+- [ ] IDE: IntelliJ Community veya VS Code + Extension Pack for Java
+- [ ] Spring Boot ve JdbcTemplate hakkında biraz bilgi tazele
 
 **Sorun yaşarsan:** Yarışma günü değil, bu gece çöz.
 
@@ -85,14 +96,14 @@ git clone https://github.com/TAKIM/REPO.git
 cd REPO
 git checkout feat/backend
 
-# .env'yi oluştur (eğer dün yapmadıysan)
-cp backend-node/.env.example backend-node/.env
-# ANTHROPIC_API_KEY'i yaz
+# API key set et
+$env:ANTHROPIC_API_KEY="sk-ant-..."   # PowerShell
+# veya: export ANTHROPIC_API_KEY=sk-ant-...
 
 # Backend'i ayağa kaldır
-cd backend-node
-npm install   # dün yaptıysan gerek yok
-npm run dev   # → port 3001'de çalışıyor olmalı
+cd backend
+mvn spring-boot:run   # dependency'leri zaten dün indirdin
+# → "Started HackathonApplication" mesajı görmelisin
 ```
 
 Backend ayakta. Şimdi AI Uzmanı'nın sözleşmesini bekle (10 dk içinde gelecek).
@@ -103,31 +114,43 @@ Backend ayakta. Şimdi AI Uzmanı'nın sözleşmesini bekle (10 dk içinde gelec
 
 ### Ana Görevler
 1. **Mimari Karar:** `AI_CONTEXT/2_architecture.md`'ye DB tabloları ve endpoint listesi yaz
-2. **Veritabanı Kur:** `dbService.js` ile tablo oluştur, CRUD fonksiyonları yaz
-3. **Ana Endpoint:** `POST /api/analyze` → AI servisini çağır, DB'ye kaydet, JSON döndür
-4. **Yardımcı Endpoint'ler:** Geçmiş kayıtlar, tek kayıt, dosya upload (gerekirse)
-5. **Hata Yönetimi:** Tüm endpoint'lerde try/catch, anlamlı hata mesajları
-6. **Validation:** Boş input, eksik alan, çok büyük veri kontrolleri
+2. **Yeni DB Tabloları:** `DbService.init()` içine `CREATE TABLE` ekle, CRUD metotları yaz
+3. **Ana Endpoint:** `POST /api/analyze` zaten var — DB'ye kaydetmesini sağlandı
+4. **Yardımcı Endpoint'ler:** Geçmiş kayıtlar (`/api/results`), tek kayıt, dosya upload — çoğu zaten hazır
+5. **Hata Yönetimi:** `GlobalExceptionHandler` çoğu durumu yakalar; özel hata mesajları için controller'da `ResponseEntity.badRequest()`
+6. **Validation:** DTO'lara `@NotBlank`, `@Size(max=...)`, `@Email` vb. ekle
 
 ### Yan Görevler
-- AI Uzmanı'nın `aiService.js`'ini doğru çağırdığından emin ol
-- Frontend'in beklediği response formatını sözleşmeye uygun tut
+- AI Uzmanı'nın `AiService`'ini doğru çağırdığından emin ol
+- Frontend'in beklediği response formatını sözleşmeye uygun tut (`ApiResponse<T>` wrapper)
 - Postman/curl ile her endpoint'i kendin test et
+- H2 Console'da DB durumunu kontrol et
 
 ---
 
 ## 7. SENIN: Dokunduğun Dosyalar
 
 ```
-backend-node/src/routes/api.js              ← Yeni endpoint'ler buraya
-backend-node/src/services/dbService.js      ← DB CRUD (sen oluşturacaksın)
-backend-node/src/services/                  ← Yeni servis dosyaları
-backend-node/src/index.js                   ← Middleware eklemen gerekirse
-AI_CONTEXT/2_architecture.md                ← DB şeması + endpoint listesi (DOLDUR)
+backend/src/main/java/com/hackathon/
+├── controller/ApiController.java       ← Yeni endpoint'ler buraya
+├── service/
+│   ├── DbService.java                  ← Yeni tablo ve CRUD metotları
+│   ├── DocumentService.java            ← Dosya işleme (zaten hazır, ekleyebilirsin)
+│   └── (yeni servisler — örn: NotificationService.java)
+├── dto/                                ← Yeni request/response DTO'ları
+│   ├── ApiResponse.java                ← Generic wrapper (zaten hazır, değiştirme)
+│   ├── AnalyzeRequest.java             ← Şema değişirse güncelle
+│   └── (yeni DTO'lar)
+└── config/                             ← Yeni @Configuration sınıfları (gerekirse)
+
+backend/src/main/resources/application.yml   ← DB veya başka config değişiklikleri
+backend/pom.xml                              ← Yeni dependency eklemek gerekirse
+AI_CONTEXT/2_architecture.md                 ← DB şeması + endpoint listesi (DOLDUR)
 ```
 
 **Dokunmayacağın yerler:**
-- `backend-node/src/services/aiService.js` (AI Uzmanı'nın — sen sadece import edip çağırırsın)
+- `service/AiService.java` (AI Uzmanı'nın — sen sadece inject edip çağırırsın)
+- `dto/AiResult.java` (AI Uzmanı'nın — şema değişikliklerini O yapar)
 - `frontend/` (Frontend'in)
 - `ai-specialist/` (AI Uzmanı'nın)
 
@@ -149,31 +172,39 @@ code AI_CONTEXT/2_architecture.md
 
 ```markdown
 ## Active Backend
-Node.js
+Java Spring Boot
 
-## Database Schema
+## Database Schema (H2 in-memory)
 
-### Table: analyses
-- id: INTEGER PRIMARY KEY AUTOINCREMENT
-- input: TEXT NOT NULL
-- context: TEXT
-- result_json: TEXT
-- score: INTEGER
-- created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+### Table: analyses (zaten DbService.init()'te var)
+- id: BIGINT AUTO_INCREMENT PRIMARY KEY
+- input: CLOB NOT NULL
+- context: CLOB
+- result_json: CLOB
+- score: INT
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+### Table: positions (YENİ — DbService.init()'e ekle)
+- id: BIGINT AUTO_INCREMENT PRIMARY KEY
+- title: VARCHAR(255) NOT NULL
+- requirements: CLOB
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 ## API Endpoints
 
-| Method | Path | Body | Response |
-|--------|------|------|----------|
-| GET | /health | — | `{status:"ok"}` |
-| POST | /api/analyze | `{input, context}` | `{success, data: <AI sonucu>}` |
-| GET | /api/results | — | `{success, data: [Analysis...]}` |
-| GET | /api/results/:id | — | `{success, data: Analysis}` |
-| POST | /api/upload | multipart file | `{success, data: {extracted_text}}` |
+| Method | Path | Body | Response.data |
+|--------|------|------|---------------|
+| GET | /api/health | — | {status} |
+| POST | /api/analyze | {input, context?} | {id, summary, insights, score, recommendation} |
+| GET | /api/results | — | [{id, input, score, created_at}] |
+| GET | /api/results/{id} | — | full row |
+| POST | /api/upload | multipart file | {filename, size, text} |
+| GET | /api/positions | — | [{id, title}] (YENİ) |
+| POST | /api/positions | {title, requirements} | {id} (YENİ) |
 ```
 
 **Bildirim:** Frontend ve FS'ye yaz:
-> "Backend mimarisi hazır. Endpoint'ler `architecture.md`'de. /api/analyze 10 dk içinde çalışır halde olacak."
+> "Backend mimarisi hazır. Endpoint'ler `architecture.md`'de. /api/analyze 10 dk içinde DB'ye kayıt yapar halde olacak."
 
 **Commit:**
 ```bash
@@ -184,293 +215,257 @@ git push
 
 ---
 
-### 🟢 [0:20 – 0:45] Veritabanı Kurulumu
+### 🟢 [0:20 – 0:45] DB Tabloları ve Yeni Endpoint'ler
 
-**Hedef:** SQLite tablosu oluştu, CRUD fonksiyonları hazır.
+**Hedef:** Yeni tablolar oluştu, CRUD metotları hazır.
 
-```bash
-code backend-node/src/services/dbService.js
+`backend/src/main/java/com/hackathon/service/DbService.java`'yı aç. `init()` metoduna yeni tabloyu ekle:
+
+```java
+@PostConstruct
+public void init() {
+    jdbc.execute("""
+        CREATE TABLE IF NOT EXISTS analyses (
+          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+          input CLOB NOT NULL,
+          context CLOB,
+          result_json CLOB,
+          score INT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """);
+
+    // YENİ TABLO
+    jdbc.execute("""
+        CREATE TABLE IF NOT EXISTS positions (
+          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          requirements CLOB,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """);
+
+    System.out.println("[DbService] tablolar hazır");
+}
 ```
 
-**dbService.js (komple kopyala):**
-```javascript
-const Database = require('better-sqlite3');
-const path = require('path');
+**Yeni tablo için CRUD metotları:**
 
-const db = new Database(path.join(__dirname, '..', '..', 'hackathon.db'));
+```java
+// DbService.java içine ekle
 
-// Tabloyu oluştur (zaten varsa atla)
-db.exec(`
-  CREATE TABLE IF NOT EXISTS analyses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    input TEXT NOT NULL,
-    context TEXT,
-    result_json TEXT,
-    score INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-// Prepared statements (hızlı, güvenli)
-const stmts = {
-  insert: db.prepare(`
-    INSERT INTO analyses (input, context, result_json, score)
-    VALUES (?, ?, ?, ?)
-  `),
-  getAll: db.prepare(`SELECT * FROM analyses ORDER BY created_at DESC LIMIT 100`),
-  getById: db.prepare(`SELECT * FROM analyses WHERE id = ?`),
-};
-
-// Wrapper fonksiyonlar
-function saveAnalysis({ input, context, result }) {
-  const score = result?.score ?? 0;
-  const info = stmts.insert.run(input, context || null, JSON.stringify(result), score);
-  return info.lastInsertRowid;
+public Long savePosition(String title, String requirements) {
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+    jdbc.update(conn -> {
+        PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO positions (title, requirements) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS
+        );
+        ps.setString(1, title);
+        ps.setString(2, requirements);
+        return ps;
+    }, keyHolder);
+    return keyHolder.getKey().longValue();
 }
 
-function getAllAnalyses() {
-  return stmts.getAll.all().map((row) => ({
-    ...row,
-    result: JSON.parse(row.result_json || '{}'),
-  }));
+public List<Map<String, Object>> getAllPositions() {
+    return jdbc.queryForList(
+            "SELECT id, title, created_at FROM positions ORDER BY created_at DESC"
+    );
 }
 
-function getAnalysisById(id) {
-  const row = stmts.getById.get(id);
-  if (!row) return null;
-  return { ...row, result: JSON.parse(row.result_json || '{}') };
+public Map<String, Object> getPositionById(Long id) {
+    List<Map<String, Object>> rows = jdbc.queryForList(
+            "SELECT * FROM positions WHERE id = ?", id
+    );
+    return rows.isEmpty() ? null : rows.get(0);
 }
-
-module.exports = { saveAnalysis, getAllAnalyses, getAnalysisById };
 ```
 
-**Test (Node REPL):**
-```bash
-cd backend-node
-node -e "const db = require('./src/services/dbService'); console.log(db.saveAnalysis({input:'test', result:{score:50}})); console.log(db.getAllAnalyses());"
-# → ID dönmeli, sonra kayıt dönmeli
+**Test (H2 Console):**
+```
+http://localhost:3001/h2-console
+JDBC URL: jdbc:h2:mem:hackathon
+User: sa, Password: (boş)
+
+SQL'i çalıştır:
+SELECT * FROM positions;
 ```
 
 **Commit:**
 ```bash
-git add backend-node/src/services/dbService.js
-git commit -m "feat(be): SQLite db setup - analyses tablosu"
+git add backend/
+git commit -m "feat(be): positions tablosu + CRUD metotları"
 git push
 ```
 
 ---
 
-### 🟢 [0:45 – 1:30] Ana Endpoint: POST /api/analyze
+### 🟢 [0:45 – 1:30] Yeni Endpoint'ler
 
-**Hedef:** Frontend'in çağırabileceği, AI'yi tetikleyen, DB'ye yazan endpoint.
+**Hedef:** Frontend'in çağırabileceği yeni endpoint'ler hazır.
 
-`backend-node/src/routes/api.js`'i aç. Mevcut `/analyze` endpoint'ini şununla değiştir:
+`backend/src/main/java/com/hackathon/controller/ApiController.java`'yı aç. Önce yeni request DTO oluştur:
 
-```javascript
-const express = require('express');
-const { analyze, analyzeWithContext } = require('../services/aiService');
-const { saveAnalysis, getAllAnalyses, getAnalysisById } = require('../services/dbService');
+`backend/src/main/java/com/hackathon/dto/PositionRequest.java`:
+```java
+package com.hackathon.dto;
 
-const router = express.Router();
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
-// Validation helper
-function validateInput(input) {
-  if (!input || typeof input !== 'string') {
-    return 'input (string) gereklidir';
-  }
-  if (input.trim().length === 0) {
-    return 'input boş olamaz';
-  }
-  if (input.length > 10000) {
-    return 'input en fazla 10000 karakter olabilir';
-  }
-  return null;
+@Data
+public class PositionRequest {
+    @NotBlank(message = "title gerekli")
+    @Size(max = 255, message = "title en fazla 255 karakter")
+    private String title;
+
+    private String requirements;
 }
-
-// POST /api/analyze
-router.post('/analyze', async (req, res, next) => {
-  try {
-    const { input, context } = req.body;
-
-    const validationError = validateInput(input);
-    if (validationError) {
-      return res.status(400).json({ success: false, error: validationError });
-    }
-
-    // AI'yi çağır
-    const result = context
-      ? await analyzeWithContext(input, context)
-      : await analyze(input);
-
-    // DB'ye kaydet
-    const id = saveAnalysis({ input, context, result });
-
-    res.json({ success: true, data: { id, ...result } });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/results
-router.get('/results', (req, res, next) => {
-  try {
-    const analyses = getAllAnalyses();
-    res.json({ success: true, data: analyses });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/results/:id
-router.get('/results/:id', (req, res, next) => {
-  try {
-    const analysis = getAnalysisById(Number(req.params.id));
-    if (!analysis) {
-      return res.status(404).json({ success: false, error: 'Kayıt bulunamadı' });
-    }
-    res.json({ success: true, data: analysis });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get('/health', (req, res) => {
-  res.json({ success: true, data: { status: 'ok' } });
-});
-
-module.exports = router;
 ```
 
-**Test her endpoint için:**
+Sonra controller'a endpoint ekle:
+
+```java
+// ApiController.java içine ekle
+
+@PostMapping("/positions")
+public ResponseEntity<ApiResponse<Map<String, Object>>> createPosition(
+        @Valid @RequestBody PositionRequest req
+) {
+    Long id = dbService.savePosition(req.getTitle(), req.getRequirements());
+    return ResponseEntity.ok(ApiResponse.ok(Map.of("id", id, "title", req.getTitle())));
+}
+
+@GetMapping("/positions")
+public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAllPositions() {
+    return ResponseEntity.ok(ApiResponse.ok(dbService.getAllPositions()));
+}
+
+@GetMapping("/positions/{id}")
+public ResponseEntity<ApiResponse<Map<String, Object>>> getPosition(@PathVariable Long id) {
+    Map<String, Object> position = dbService.getPositionById(id);
+    if (position == null) {
+        return ResponseEntity.status(404).body(ApiResponse.fail("Position bulunamadı"));
+    }
+    return ResponseEntity.ok(ApiResponse.ok(position));
+}
+```
+
+**Test her endpoint için (Spring Boot DevTools yoksa restart gerekir):**
 
 ```bash
-# /api/analyze
-curl -X POST http://localhost:3001/api/analyze \
+# POST /api/positions
+curl -X POST http://localhost:3001/api/positions \
   -H "Content-Type: application/json" \
-  -d '{"input": "Yasin, 5 yıl Java geliştirici"}'
-# → { success: true, data: { id: 1, score: ..., ... } }
+  -d "{\"title\":\"Senior Java Developer\",\"requirements\":\"Java 21, Spring Boot\"}"
+# → { success: true, data: { id: 1, title: "..." } }
 
-# /api/results
-curl http://localhost:3001/api/results
-# → { success: true, data: [{ id: 1, ... }] }
+# GET /api/positions
+curl http://localhost:3001/api/positions
+# → { success: true, data: [{ id: 1, title: "...", created_at: "..." }] }
 
-# /api/results/:id
-curl http://localhost:3001/api/results/1
-# → { success: true, data: { id: 1, ... } }
+# GET /api/positions/1
+curl http://localhost:3001/api/positions/1
+# → { success: true, data: { id: 1, title: "...", requirements: "..." } }
 
-# Validation testi
-curl -X POST http://localhost:3001/api/analyze \
+# Validation testi (boş title)
+curl -X POST http://localhost:3001/api/positions \
   -H "Content-Type: application/json" \
-  -d '{}'
-# → 400, { success: false, error: "input (string) gereklidir" }
+  -d "{\"title\":\"\"}"
+# → 400, { success: false, error: "title gerekli" }
 ```
 
 **Bildirim:** Frontend'e söyle:
-> "POST /api/analyze hazır. Response: `{success, data: {id, score, summary, verdict, details}}`. Bağlayabilirsin."
+> "POST /api/positions ve GET /api/positions hazır. Detaylar `architecture.md`'de. Bağlayabilirsin."
 
 **Commit:**
 ```bash
-git add backend-node/src/routes/api.js
-git commit -m "feat(be): POST /api/analyze endpoint çalışıyor"
+git add backend/
+git commit -m "feat(be): /api/positions CRUD endpoint'leri"
 git push
 ```
 
 ---
 
-### 🟢 [1:30 – 2:30] Ek Endpoint'ler ve Dosya Upload
+### 🟢 [1:30 – 2:30] Ek Özellikler (Gerekirse)
 
 **Hedef:** Frontend'in ihtiyaç duyabileceği tüm endpoint'ler hazır.
 
-#### Dosya Upload (gerekirse)
+#### Dosya Upload (zaten var, gerekirse genişlet)
 
-PDF, TXT, görsel yükleme varsa:
+`/api/upload` endpoint'i `DocumentService` ile çalışıyor. PDF, TXT, MD kabul ediyor.
+Eğer Word veya başka format gerekirse `DocumentService.extractText()` metodunu genişlet:
 
-```javascript
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
+```java
+// DocumentService.java
+public String extractText(MultipartFile file) throws IOException {
+    String name = file.getOriginalFilename();
+    String ext = name.substring(name.lastIndexOf('.') + 1).toLowerCase();
 
-const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
-
-const upload = multer({
-  dest: UPLOAD_DIR,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.pdf', '.txt', '.md'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.includes(ext)) cb(null, true);
-    else cb(new Error('Sadece PDF, TXT, MD dosyaları kabul edilir'));
-  },
-});
-
-router.post('/upload', upload.single('file'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'Dosya yüklenmedi' });
+    if ("pdf".equals(ext)) {
+        try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
+            return new PDFTextStripper().getText(doc);
+        }
     }
-    const content = fs.readFileSync(req.file.path, 'utf-8');
-    res.json({
-      success: true,
-      data: {
-        filename: req.file.originalname,
-        size: req.file.size,
-        text: content.slice(0, 5000), // İlk 5000 karakter
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-```
-
-PDF için ek dependency:
-```bash
-npm install pdf-parse
+    if ("txt".equals(ext) || "md".equals(ext)) {
+        return new String(file.getBytes(), StandardCharsets.UTF_8);
+    }
+    if ("docx".equals(ext)) {
+        // Apache POI dependency ekleyip kullan
+        // <dependency><groupId>org.apache.poi</groupId>...</dependency>
+    }
+    throw new IOException("Desteklenmeyen dosya tipi: ." + ext);
+}
 ```
 
 #### İstatistikler Endpoint'i (opsiyonel ama jüriye iyi görünür)
 
-```javascript
-const stats = db.prepare(`
-  SELECT
-    COUNT(*) as total,
-    AVG(score) as avg_score,
-    MAX(score) as max_score,
-    MIN(created_at) as first_analysis
-  FROM analyses
-`);
-
-router.get('/stats', (req, res) => {
-  const data = stats.get();
-  res.json({ success: true, data });
-});
+```java
+// ApiController.java
+@GetMapping("/stats")
+public ResponseEntity<ApiResponse<Map<String, Object>>> stats() {
+    Map<String, Object> stats = jdbcTemplate.queryForMap("""
+        SELECT
+          COUNT(*) AS total,
+          AVG(score) AS avg_score,
+          MAX(score) AS max_score
+        FROM analyses
+    """);
+    return ResponseEntity.ok(ApiResponse.ok(stats));
+}
 ```
 
-#### Sıralama / Filtreleme (gerekirse)
+Not: `JdbcTemplate jdbcTemplate`'i ya `DbService`'e yeni metot olarak ekle, ya da controller'a direkt inject et (genelde service'te tutmak daha temiz).
 
-```javascript
-router.get('/results', (req, res, next) => {
-  try {
-    const { sort = 'created_at', order = 'desc', minScore = 0 } = req.query;
-    const sql = `
-      SELECT * FROM analyses
-      WHERE score >= ?
-      ORDER BY ${sort} ${order === 'asc' ? 'ASC' : 'DESC'}
-      LIMIT 100
-    `;
-    const analyses = db.prepare(sql).all(Number(minScore));
-    res.json({ success: true, data: analyses });
-  } catch (err) {
-    next(err);
-  }
-});
+#### Sıralama / Filtreleme
+
+```java
+@GetMapping("/results")
+public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAll(
+        @RequestParam(value = "minScore", defaultValue = "0") int minScore,
+        @RequestParam(value = "sort", defaultValue = "created_at") String sort
+) {
+    // SQL injection'a karşı: sort parametresini whitelist'le
+    String safeSort = List.of("created_at", "score").contains(sort) ? sort : "created_at";
+    List<Map<String, Object>> rows = dbService.getAllAnalysesFiltered(minScore, safeSort);
+    return ResponseEntity.ok(ApiResponse.ok(rows));
+}
+```
+
+Eşleşen `DbService.getAllAnalysesFiltered`:
+```java
+public List<Map<String, Object>> getAllAnalysesFiltered(int minScore, String sortColumn) {
+    String sql = "SELECT id, input, score, created_at FROM analyses WHERE score >= ? ORDER BY " + sortColumn + " DESC LIMIT 100";
+    return jdbc.queryForList(sql, minScore);
+}
 ```
 
 **Her büyük değişiklikten sonra commit:**
 ```bash
-git add backend-node/
-git commit -m "feat(be): dosya upload endpoint"
+git add backend/
+git commit -m "feat(be): stats ve filtreleme endpoint'leri"
 git push
 ```
 
@@ -486,41 +481,56 @@ git push
 # 1. Normal akış
 curl -X POST localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "normal metin"}'
+  -d "{\"input\": \"normal metin\"}"
 
 # 2. Boş body
 curl -X POST localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{}'
-# → 400 hatası
+  -d "{}"
+# → 400 hatası "input gereklidir"
 
 # 3. Yanlış tip (number)
 curl -X POST localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": 123}'
-# → 400 hatası
+  -d "{\"input\": 123}"
+# → 400 hatası (Jackson type mismatch)
 
-# 4. Çok uzun metin
+# 4. Çok uzun metin (10001 karakter)
 curl -X POST localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"input": "'"$(printf 'a%.0s' {1..20000})"'"}'
-# → 400 hatası (10000 karakter limiti)
+  -d "{\"input\":\"$(printf 'a%.0s' {1..10001})\"}"
+# → 400 hatası "input en fazla 10000 karakter olabilir"
 
 # 5. Olmayan endpoint
 curl localhost:3001/api/foo
-# → 404
+# → 404 (Spring otomatik)
 
-# 6. Geçersiz JSON body
+# 6. Geçersiz JSON
 curl -X POST localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
-  -d 'not json'
-# → 400 (Express otomatik halleder)
+  -d "not json"
+# → 400 (Jackson parse error)
+
+# 7. File upload — yanlış tip
+echo "test" > test.xyz
+curl -X POST localhost:3001/api/upload -F "file=@test.xyz"
+# → 400 "Desteklenmeyen dosya tipi"
+```
+
+#### H2 Console İncelemesi
+
+http://localhost:3001/h2-console — JDBC URL: `jdbc:h2:mem:hackathon`, user: `sa`, password boş.
+
+```sql
+SELECT COUNT(*) FROM analyses;
+SELECT * FROM analyses ORDER BY score DESC LIMIT 10;
+SELECT AVG(score) FROM analyses;
 ```
 
 #### Final Commit
 
 ```bash
-git add backend-node/
+git add backend/
 git commit -m "feat(be): tüm endpointler hazır + validation tamamlandı"
 git push
 ```
@@ -539,61 +549,52 @@ git checkout main
 git pull origin main
 
 # Backend'i restart et
-cd backend-node && npm run dev
+cd backend && mvn spring-boot:run
 ```
 
 #### Uçtan uca test:
 1. Frontend'i aç (Frontend'ci başlatmış olmalı)
 2. Form gönder → backend log'da çağrı görmeli misin
-3. DB dosyası (`hackathon.db`) oluşmuş mu kontrol et:
-   ```bash
-   ls -la backend-node/hackathon.db
-   ```
+3. H2 Console'da yeni satırı gör
 
 #### Sunum Notları (1 dakika)
 
-> "Backend tarafında Express.js kullandık.
-> Anthropic API'sini direkt çağırmak yerine `aiService.js` adında bir soyutlama katmanı oluşturduk — böylece istediğimiz zaman OpenAI veya Gemini'ye geçebiliriz.
-> Her endpoint'te try/catch ve validation var. Veriyi SQLite'a kalıcı olarak yazıyoruz, kullanıcı geçmiş analizleri görebilir.
-> Hata durumunda fallback yanıt dönüyor — kullanıcı boş bir ekran görmüyor."
+> "Backend tarafında Java 21 + Spring Boot 3 kullandık.
+> Anthropic API'sini direkt çağırmak yerine `AiService` adında bir soyutlama katmanı oluşturduk — RestTemplate ile HTTP POST yapıyor, dilersek başka modele kolayca geçebiliriz.
+> Her endpoint'te validation (jakarta.validation) ve global exception handler var.
+> Veriyi H2 in-memory DB'ye `JdbcTemplate` ile yazıyoruz — sıfır konfigürasyon, hızlı geliştirme.
+> PDF analizi için Apache PDFBox 3.x entegre, kullanıcı belge yükleyebiliyor.
+> Hata durumunda `AiResult.fallback()` yanıt dönüyor — kullanıcı boş bir ekran görmüyor."
 
 ---
 
 ## 9. SENIN: Sık Karşılaştığın Hatalar
 
-### Hata 1: `Cannot find module 'better-sqlite3'`
+### Hata 1: `mvn spring-boot:run` çalışmıyor — "JAVA_HOME not set"
 
 **Çözüm:**
 ```bash
-cd backend-node
-npm install
-# Hâlâ olmuyorsa:
-npm install better-sqlite3 --build-from-source
+# Java'nın yolunu bul
+where java        # Windows
+which java        # Linux/Mac
+
+# JAVA_HOME set et (Windows PowerShell, kalıcı için sistem ayarları)
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21..."
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 ```
-Windows'ta build araçları yoksa:
-```bash
-npm install --global windows-build-tools
-```
+
+Yeniden terminal aç, tekrar dene.
 
 ---
 
-### Hata 2: SQLite "database is locked"
+### Hata 2: H2 "database is locked" veya tablolar bulunamıyor
 
-**Nedenler:**
-- Aynı anda başka bir Node process açık (önceki `npm run dev` tam kapanmadı)
-- DB dosyası başka bir uygulamada açık (SQLite browser vb.)
+**Sebep:** H2 in-memory zaten her restart'ta sıfırlanır. Sorun varsa muhtemelen `@PostConstruct` çalışmıyor.
 
 **Çözüm:**
-```bash
-# Tüm node processlerini kapat
-# Windows:
-taskkill /F /IM node.exe
-# Linux/Mac:
-killall node
-
-# Sonra
-npm run dev
-```
+- `DbService.java`'da `@PostConstruct` import edildi mi? (`jakarta.annotation.PostConstruct`)
+- `@Service` annotation'ı var mı? (Spring bean olarak yüklenmesi için)
+- Log'larda "[DbService] tablolar hazır" mesajı var mı?
 
 ---
 
@@ -604,52 +605,55 @@ npm run dev
 Access to XMLHttpRequest at 'http://localhost:3001/api/...' from origin 'http://localhost:5173' blocked by CORS policy
 ```
 
-**Çözüm:** `backend-node/src/index.js`'i kontrol et:
-```javascript
-app.use(cors({ origin: 'http://localhost:5173' }));
+**Çözüm:** `CorsConfig.java`'da origin doğru mu?
+```java
+.allowedOrigins("http://localhost:5173")
 ```
 
-Yoksa şu olabilir:
-- Frontend farklı port'ta çalışıyor → cors origin'i güncelle
-- Vite proxy bypass ediliyor → frontend'in `vite.config.js`'i kontrol et
+Frontend farklı port'taysa burayı güncelle.
 
 Geçici hızlı çözüm (test için):
-```javascript
-app.use(cors()); // tüm origin'lere açar
+```java
+.allowedOriginPatterns("*")
+.allowedMethods("*")
 ```
 
 ---
 
-### Hata 4: Body undefined
-
-**Belirti:**
-```javascript
-const { input } = req.body; // input undefined
-```
-
-**Çözüm:** `index.js`'te şunlar var mı kontrol et:
-```javascript
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-```
-
-Postman/curl'de:
-- `Content-Type: application/json` header'ı var mı?
-- Body geçerli JSON mu?
-
----
-
-### Hata 5: AI çağrısı yavaş (>10 saniye)
+### Hata 4: `@Valid` çalışmıyor (validation atlanıyor)
 
 **Çözüm:**
-- `aiService.js`'de `max_tokens` değerini düşür (AI Uzmanı'na söyle)
-- Timeout ekle:
-  ```javascript
-  const message = await Promise.race([
-    client.messages.create({...}),
-    new Promise((_, rej) => setTimeout(() => rej(new Error('AI timeout')), 15000))
-  ]);
-  ```
+- `pom.xml`'de `spring-boot-starter-validation` var mı? (var)
+- DTO'da annotation doğru mu? `@NotBlank(message = "...")` ve field `private String x`
+- Controller'da `@Valid @RequestBody` her ikisi de var mı?
+- `GlobalExceptionHandler.handleValidation` set edilmiş mi? (var)
+
+---
+
+### Hata 5: AI çağrısı 401 Unauthorized
+
+**Sebep:** `ANTHROPIC_API_KEY` env variable set değil veya yanlış.
+
+**Çözüm:**
+```bash
+# Terminal'i kapat, yeniden aç
+echo $ANTHROPIC_API_KEY      # Linux/Mac
+echo $env:ANTHROPIC_API_KEY  # PowerShell
+
+# Boş veya yanlışsa set et
+export ANTHROPIC_API_KEY=sk-ant-...
+$env:ANTHROPIC_API_KEY="sk-ant-..."
+
+# Backend'i restart et (aynı terminal'de)
+cd backend && mvn spring-boot:run
+```
+
+Veya geçici olarak `application.yml`'de default'u değiştir:
+```yaml
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:sk-ant-gerçek-key-buraya}
+```
+**ASLA git'e commit etme!**
 
 ---
 
@@ -657,7 +661,6 @@ Postman/curl'de:
 
 **Çözüm:**
 ```bash
-# Hangi process kullanıyor bul:
 # Windows:
 netstat -ano | findstr :3001
 taskkill /PID <PID> /F
@@ -665,44 +668,55 @@ taskkill /PID <PID> /F
 # Linux/Mac:
 lsof -i :3001
 kill -9 <PID>
-
-# Veya .env'de farklı port:
-PORT=3002
 ```
 
-Bu durumda Frontend'in `vite.config.js`'ini de güncelle:
+Veya `application.yml`'de farklı port:
+```yaml
+server:
+  port: 3002
+```
+
+Bu durumda frontend `vite.config.js`'i de güncelle:
 ```javascript
 proxy: { '/api': { target: 'http://localhost:3002' } }
 ```
 
 ---
 
-### Hata 7: Java seçildi ama backend başlamıyor
+### Hata 7: PDFBox NoClassDefFoundError veya OutOfMemoryError
 
 **Çözüm:**
-```bash
-java -version  # 21 olmalı
-mvn -version
+- `pom.xml`'de `pdfbox 3.0.1` var mı?
+- `mvn clean install` ile dependency'leri yeniden indir
+- Büyük PDF'lerde memory artışı için `application.yml`'e:
+  ```yaml
+  spring:
+    servlet:
+      multipart:
+        max-file-size: 5MB
+        max-request-size: 5MB
+  ```
 
-cd backend-java
-mvn clean install
+---
+
+### Hata 8: AiService değişikliği reload olmuyor
+
+**Çözüm:** Spring Boot DevTools eklenmediyse her değişiklik için backend'i restart et:
+```bash
+Ctrl+C
 mvn spring-boot:run
 ```
 
-`application.yml`'de API key var mı?
-```yaml
-anthropic:
-  api-key: ${ANTHROPIC_API_KEY:dev-key-placeholder}
+Otomatik restart için `pom.xml`'e:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
 ```
-
-Env variable set et:
-```bash
-# Windows
-set ANTHROPIC_API_KEY=sk-ant-...
-
-# Linux/Mac
-export ANTHROPIC_API_KEY=sk-ant-...
-```
+IDE'de "Build project automatically" açık olmalı.
 
 ---
 
@@ -710,19 +724,20 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ### Sunumda göstereceğin 2 şey:
 
-1. **Mimari Diyagram (sözlü)**
-   - "Express.js → aiService (Claude API) → SQLite DB"
-   - "Her endpoint'te try/catch, validation, fallback"
+1. **Mimari (sözlü)**
+   - "Spring Boot REST API → AiService (RestTemplate, Anthropic) → H2 in-memory DB"
+   - "Her endpoint'te validation, GlobalExceptionHandler, fallback yanıt"
 
-2. **Canlı Endpoint Testi (opsiyonel, etkileyici)**
-   - Postman veya curl ile bir endpoint çağır
-   - "Bakın, history endpoint'imiz geçmiş kayıtları getiriyor"
+2. **Canlı Endpoint Testi (opsiyonel ama etkileyici)**
+   - H2 Console'u ekranda aç, DB'deki kayıtları göster
+   - "Bakın, /api/results endpoint'i geçmiş analizleri SQL ile çekiyor"
 
 ### Soru-cevap için hazırlık:
-- **"Neden SQLite?"** → 4 saatte sıfır config, dosya bazlı, prod'a geçmek istersek PostgreSQL'e migration kolay
-- **"Auth yok mu?"** → MVP scope dışında, JWT eklemek 30 dakika sürer, gerekirse ekleriz
-- **"Ölçeklendirme?"** → Stateless, horizontal scale edilebilir. DB için PostgreSQL ve Redis cache eklenebilir.
-- **"Neden Express, Spring Boot değil?"** → AI hackathon hızı için. Tek dilde (JS) full-stack, daha az boilerplate
+- **"Neden H2?"** → 4 saatte sıfır config, restart'ta temiz state. Prod için PostgreSQL'e geçmek `application.yml` değişikliğiyle 10 dakika sürer.
+- **"Auth yok mu?"** → MVP scope dışında, Spring Security + JWT eklemek 30 dk sürer.
+- **"Ölçeklendirme?"** → Stateless, horizontal scale OK. DB için PostgreSQL ve Redis cache.
+- **"Neden Spring Boot?"** → Java ekosistemi olgun, Anthropic API HTTP olduğu için ekstra SDK gerektirmiyor, JdbcTemplate ile JPA boilerplate'ten kaçtık.
+- **"JPA kullanmadınız mı?"** → 4 saatte JPA entity setup'ı vakit alır. JdbcTemplate daha düşük seviyeli ve hızlı.
 
 ---
 
@@ -743,26 +758,26 @@ git checkout feat/backend
 git pull origin feat/backend
 
 # Çalışırken her ~30 dk (veya her endpoint sonrası)
-git add backend-node/
+git add backend/
 git commit -m "feat(be): [ne değişti]"
 git push
 
 # main'den güncelleme al (FS merge yaptıktan sonra)
 git checkout feat/backend
-git merge main      # Veya: git pull origin main --rebase
+git merge main
 ```
 
 ### Commit Mesaj Formatı
 ```
-feat(be): POST /api/analyze endpoint
-feat(be): SQLite kurulumu
+feat(be): POST /api/positions endpoint
+feat(be): H2 positions tablosu kuruldu
 fix(be): boş input 400 dönmüyordu
 docs(be): architecture.md güncellendi
 ```
 
 ### Yasak Komutlar
 - `git push --force` — asla
-- `git reset --hard` — asla (kendi dosyanı kaybetmek istemiyorsan)
+- `git reset --hard` — asla
 - `main` branch'e direkt commit — sadece FS
 
 ---
@@ -774,13 +789,13 @@ docs(be): architecture.md güncellendi
 | Olay | Kime | Mesaj Örneği |
 |------|------|--------------|
 | Mimari hazır | Tüm ekip | "DB şeması ve endpoint listesi `architecture.md`'de" |
-| /api/analyze çalışıyor | Frontend, FS | "POST /api/analyze hazır, body: `{input}`, response: `{success, data}`" |
-| Yeni endpoint | Frontend | "GET /api/results eklendi, kayıtları listeliyor" |
-| DB şeması değişti | AI Uzmanı, FS | "analyses tablosuna `position` alanı ekledim" |
-| Tıkandım | Tüm ekip | "Multer upload'da hata var, 15 dk içinde çözeceğim" |
+| /api/analyze çalışıyor | Frontend, FS | "POST /api/analyze hazır, DB'ye kaydediyor, response: `{success, data}`" |
+| Yeni endpoint | Frontend | "POST /api/positions eklendi, body: `{title, requirements}`" |
+| DB şeması değişti | AI Uzmanı, FS | "positions tablosu eklendi" |
+| Tıkandım | Tüm ekip | "Multer file upload'da hata var, 15 dk içinde çözeceğim" |
 
 ### Sana Bildirilenler
-- AI Uzmanı: "aiService.analyze fonksiyonu Promise döndürüyor, await edin"
+- AI Uzmanı: "AiResult DTO'sunda yeni alan eklendi, controller'da ekrana basıyor musun?"
 - Frontend: "POST /api/analyze 500 dönüyor, log'a bakar mısın"
 - FS: "Merge yapıyorum, 2 dk commit atma"
 
@@ -796,33 +811,42 @@ Her saat 2 dakika dur:
 
 ### Senaryo 1: Tüm endpoint'ler 500 dönüyor
 **Çözüm:**
-- `backend-node/src/index.js`'de errorHandler middleware sırası doğru mu? (en sonda olmalı)
-- Console log'larına bak (`npm run dev` çıktısı)
-- Try/catch eksik bir yer var mı?
+- `GlobalExceptionHandler` aktif mi? (`@RestControllerAdvice` annotation)
+- Console log'larına bak (`mvn spring-boot:run` çıktısı)
+- Bean ya da dependency injection sorunu olabilir — Stack trace'i oku
 
-### Senaryo 2: SQLite tamamen bozuldu
-**Çözüm:**
-```bash
-rm backend-node/hackathon.db
-# Server'ı restart et, tablo yeniden oluşur
+### Senaryo 2: H2 verisi kayboldu
+**Sebep:** Backend restart edildi (in-memory, restart'ta temizlenir)
+**Çözüm:** Demo verileri yeniden ekle. Eğer kalıcılık şart ise:
+```yaml
+# application.yml
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/hackathon  # file:./ ile dosyaya yaz
 ```
-Veri kaybı sorun değil — demo verileri yeniden ekleyebilirsin.
 
 ### Senaryo 3: AI çağrısı timeout
 **Çözüm:**
-- AI Uzmanı'na söyle: prompt'u kısalt, max_tokens'ı düşür
-- Fallback yanıt zaten aktif (aiService.js'de)
-- Demo öncesi cache: birkaç başarılı yanıtı DB'de tut, demo için aynı input'u kullan
+- AI Uzmanı'na söyle: prompt'u kısalt, `max_tokens`'ı düşür
+- `AiService`'te `restTemplate` timeout ayarla:
+  ```java
+  // AiService constructor'ında veya @Bean ile:
+  HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+  factory.setConnectTimeout(5000);
+  factory.setReadTimeout(15000);
+  restTemplate = new RestTemplate(factory);
+  ```
+- Fallback yanıt zaten aktif (AiService.callClaude'de)
 
 ### Senaryo 4: Frontend bağlanamıyor (CORS)
-**Çözüm:** Yukarıda "Hata 3" çözümüne bak. Hızlı çözüm: `app.use(cors())` (sınırsız)
+**Çözüm:** Yukarıda "Hata 3" çözümüne bak. Hızlı: `.allowedOriginPatterns("*")`.
 
-### Senaryo 5: AI Uzmanı'nın aiService.js'i bozuldu
+### Senaryo 5: AI Uzmanı'nın AiService'i bozuldu
 **Çözüm:**
-- `aiService.js`'in son çalışan versiyonuna git'ten geri dön:
+- `AiService.java`'nın son çalışan versiyonuna git'ten geri dön:
   ```bash
-  git log --oneline backend-node/src/services/aiService.js
-  git checkout <hash> -- backend-node/src/services/aiService.js
+  git log --oneline backend/src/main/java/com/hackathon/service/AiService.java
+  git checkout <hash> -- backend/src/main/java/com/hackathon/service/AiService.java
   ```
 - AI Uzmanı ile birlikte fix yap
 
@@ -834,8 +858,9 @@ Veri kaybı sorun değil — demo verileri yeniden ekleyebilirsin.
 
 - [ ] `feat/backend` branch'in `main`'e merge edilmiş
 - [ ] `main` üzerinde tüm endpoint'ler çalışıyor
-- [ ] `hackathon.db` dosyası mevcut ve okuyor
-- [ ] `.env` git'e gitmemiş
+- [ ] `mvn spring-boot:run` sorunsuz başlatıyor
+- [ ] H2 Console erişilebilir (`/h2-console`)
+- [ ] `ANTHROPIC_API_KEY` git'e commit edilmemiş (env variable kullanılıyor)
 - [ ] `AI_CONTEXT/2_architecture.md` final hâliyle güncel
 - [ ] Frontend ile uçtan uca akış başarılı
 
@@ -852,44 +877,92 @@ git push origin feat/backend
 ## 15. Hızlı Referans
 
 ### Endpoint şablonu (kopyala-yapıştır)
-```javascript
-router.METHOD('/path', async (req, res, next) => {
-  try {
-    // Validation
-    if (!req.body.X) return res.status(400).json({ success: false, error: 'X gerekli' });
+```java
+@PostMapping("/path")
+public ResponseEntity<ApiResponse<YourDto>> yourEndpoint(@Valid @RequestBody YourRequest req) {
+    // Validation @Valid ile yapıldı, ek kontrol gerekirse:
+    if (someCondition) {
+        return ResponseEntity.badRequest().body(ApiResponse.fail("anlamlı mesaj"));
+    }
 
     // İş mantığı
-    const result = await someService.do(req.body.X);
+    YourDto result = someService.doSomething(req.getX());
 
     // DB
-    saveAnalysis({...});
+    dbService.save(...);
 
     // Yanıt
-    res.json({ success: true, data: result });
-  } catch (err) {
-    next(err); // errorHandler middleware'i halleder
-  }
-});
+    return ResponseEntity.ok(ApiResponse.ok(result));
+}
 ```
 
-### SQLite hızlı sorgular
-```javascript
-// SELECT
-db.prepare('SELECT * FROM t WHERE x = ?').all(value);   // .all() = array
-db.prepare('SELECT * FROM t WHERE id = ?').get(id);     // .get() = tek satır
+### JdbcTemplate hızlı sorgular
+```java
+// SELECT — multiple rows
+List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM t WHERE x = ?", value);
 
-// INSERT
-const info = db.prepare('INSERT INTO t (a,b) VALUES (?,?)').run('x', 'y');
-console.log(info.lastInsertRowid);
+// SELECT — single row (Map)
+Map<String, Object> row = jdbc.queryForMap("SELECT * FROM t WHERE id = ?", id);
+// Yoksa EmptyResultDataAccessException atar → try/catch ile null dön
+
+// SELECT — single value
+String name = jdbc.queryForObject("SELECT name FROM t WHERE id = ?", String.class, id);
+
+// INSERT with generated key
+KeyHolder kh = new GeneratedKeyHolder();
+jdbc.update(conn -> {
+    PreparedStatement ps = conn.prepareStatement(
+        "INSERT INTO t (a,b) VALUES (?,?)",
+        Statement.RETURN_GENERATED_KEYS
+    );
+    ps.setString(1, "x");
+    ps.setString(2, "y");
+    return ps;
+}, kh);
+Long newId = kh.getKey().longValue();
 
 // UPDATE / DELETE
-db.prepare('UPDATE t SET x = ? WHERE id = ?').run(newVal, id);
-db.prepare('DELETE FROM t WHERE id = ?').run(id);
+int affected = jdbc.update("UPDATE t SET x = ? WHERE id = ?", newVal, id);
+jdbc.update("DELETE FROM t WHERE id = ?", id);
+```
+
+### DTO şablonu (Lombok)
+```java
+package com.hackathon.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
+@Data
+public class YourRequest {
+    @NotBlank(message = "alan gerekli")
+    @Size(max = 255)
+    private String yourField;
+}
+```
+
+### Maven komutları
+```bash
+mvn dependency:resolve    # bağımlılıkları indir
+mvn clean compile         # temizle + derle
+mvn spring-boot:run       # çalıştır
+mvn clean package         # JAR oluştur (target/...jar)
+java -jar target/hackathon-backend-1.0.0.jar   # JAR'ı direkt çalıştır
+mvn test                  # testleri çalıştır
+```
+
+### H2 Console
+```
+URL:      http://localhost:3001/h2-console
+JDBC URL: jdbc:h2:mem:hackathon
+User:     sa
+Password: (boş)
 ```
 
 ### `/ship` komutu (Claude Code'da)
 ```
-/ship backend-node/src/routes/api.js'e POST /api/upload endpoint'i ekle, multer ile pdf kabul etsin
+/ship ApiController.java'ya POST /api/feedback endpoint'i ekle, DbService'e feedback tablosu kur
 ```
 4 agent (planner→coder→tester→reviewer) otomatik çalışır.
 

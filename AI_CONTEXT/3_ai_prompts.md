@@ -1,13 +1,14 @@
 # PRODUCT AI PROMPTS
 # Managed by: AI Model Specialist
-# Used in: backend/src/services/aiService.js (or AiService.java)
+# Used in: backend/src/main/java/com/hackathon/service/AiService.java
 
 ---
 
 ## How to Use This File
 1. Write/refine prompts here first (easier to edit plain text)
-2. Copy the final system prompt into `aiService.js`
-3. Test with `curl` or the `/api/analyze` endpoint before integrating with frontend
+2. Copy the final system prompt into `AiService.SYSTEM_PROMPT` constant (Java text block `"""..."""`)
+3. Restart backend (`Ctrl+C` → `mvn spring-boot:run`)
+4. Test with `curl` or the `/api/analyze` endpoint before integrating with frontend
 
 ---
 

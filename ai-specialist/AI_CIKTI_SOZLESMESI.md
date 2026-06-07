@@ -135,16 +135,21 @@ Yarışmanın ilk 15-20 dakikasında bu dosyayı ekiple birlikte netleştir.
 
 ## Fallback (API Hata Verirse)
 
-Bu değerler `aiService.js`'deki `FALLBACK_RESPONSE` sabitine girilir.
+Bu değerler `AiResult.java` içindeki `fallback()` static method'una girilir.
 Uygulama hiçbir zaman boş ekran göstermez.
 
-```json
-{
-  "[ALAN_1]": [varsayılan değer],
-  "[ALAN_2]": "Analiz şu an kullanılamıyor. Lütfen tekrar deneyin.",
-  "[ALAN_3]": []
+```java
+public static AiResult fallback() {
+    AiResult r = new AiResult();
+    r.setSummary("Analiz şu an kullanılamıyor. Lütfen tekrar deneyin.");
+    r.setInsights(List.of());
+    r.setScore(0);
+    r.setRecommendation("Birkaç saniye sonra tekrar dene.");
+    return r;
 }
 ```
+
+`AiService.callClaude()` exception yakaladığında otomatik bu fallback'i döner.
 
 ---
 
@@ -163,9 +168,9 @@ Uygulama hiçbir zaman boş ekran göstermez.
 ## Ekip İletişim Protokolü
 
 **AI Uzmanı → Backend:**
-"Yeni sürümü `aiService.js`'e yazdım. Çıktı artık `verdict` yerine `decision` kullanıyor.
-`AI_CIKTI_SOZLESMESI.md` güncellendi. Senin `api.js`'de bir değişiklik gerekmez,
-alan adını sadece frontend'de güncellemek yeterli."
+"Yeni sürümü `AiService.java`'ya yazdım. Çıktı artık `verdict` yerine `decision` kullanıyor.
+`AiResult.java` DTO'sunda da alan eklendi. `AI_CIKTI_SOZLESMESI.md` güncellendi.
+`ApiController.java`'da `analyze` endpoint'inde alan ismi geçtiyse oraya da bak."
 
 **Backend → AI Uzmanı:**
 "Endpoint şimdi `position` alanını da gönderecek. Prompt'una ekler misin?"

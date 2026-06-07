@@ -26,7 +26,7 @@ Kısaca: Backend ne kadar iyi çalışırsa çalışsın, jüri arayüzü görem
 Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic Claude.
 
 **Tech Stack:**
-- **Backend:** Node.js 20 + Express (önerilen) veya Java 21 + Spring Boot
+- **Backend:** Java 21 + Spring Boot 3.2.5 (port 3001)
 - **Frontend:** React 18 + Vite + Tailwind CSS + Axios
 - **AI:** Anthropic Claude — `claude-sonnet-4-6` (AI Uzmanı yönetir)
 - **Git:** Her rol kendi branch'inde, FS yöneticisi merge'leri yapar
@@ -55,8 +55,8 @@ Boilerplate hazır → React frontend + (Node.js veya Java) backend + Anthropic 
 
 | Rol | Sorumluluk | Dokunduğu |
 |-----|-----------|-----------|
-| **AI Uzmanı** | Prompt, aiService, çıktı sözleşmesi | `ai-specialist/`, `aiService.js` |
-| **Backend** | Endpoint'ler, DB | `backend-node/src/routes/`, `services/` (AI dışı) |
+| **AI Uzmanı** | Prompt, AiService, çıktı sözleşmesi | `ai-specialist/`, `AiService.java` |
+| **Backend** | Java endpoint'leri, DB, file upload | `backend/src/main/java/com/hackathon/` (AiService dışı) |
 | **Frontend (sen)** | UI, kullanıcı akışı | `frontend/src/` |
 | **FS Yöneticisi** | Git, merge, koordinasyon | Her yer (dikkatli) |
 
@@ -127,7 +127,7 @@ frontend/tailwind.config.js        ← Tema (renkler vb.)
 ```
 
 **Dokunmayacağın yerler:**
-- `backend-node/` (Backend'in)
+- `backend/` (Backend'in)
 - `ai-specialist/` (AI Uzmanı'nın)
 - `frontend/vite.config.js` (FS'in)
 
@@ -591,6 +591,17 @@ Access-Control-Allow-Origin error
 
 ---
 
+### Hata 2.1: Java backend çalışmıyor
+
+**Belirti:** API çağrısı 502/503 veya "connection refused"
+
+**Çözüm:**
+- Backend ekibinden kontrol iste: `mvn spring-boot:run` çalışıyor mu?
+- Port 3001 dinleniyor mu? `curl http://localhost:3001/health` ile dene
+- Genelde `ANTHROPIC_API_KEY` env variable eksik olur — Backend'ciye sor
+
+---
+
 ### Hata 3: Tailwind class'ları çalışmıyor
 
 **Belirti:** `className="bg-blue-500"` yazıyorum ama mavi olmuyor.
@@ -771,7 +782,7 @@ Her saat 2 dakika dur:
 **Çözüm:**
 - Mock veriyle UI'ı geliştirmeye devam et
 - Backend'ciye yardıma git
-- Son çare: `aiService.js`'i direkt frontend'den çağır (CORS sorunu olur, ek konfig gerekir)
+- Son çare: Anthropic API'sini direkt frontend'den çağır (CORS sorunu olur, anahtar açığa çıkar — sadece son çare)
 
 ### Senaryo 2: Build hatası, sayfa açılmıyor
 **Çözüm:**
