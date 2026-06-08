@@ -1,0 +1,31 @@
+ai-specialist/PROMPT_GELISTIRME.md
+  s_cf34e0b868e106::t_f4c753f66ea4d5 145-166
+  s_cf34e0b868e106::t_53dbb90a1581f5 128,130-143
+  s_cf34e0b868e106::t_1a8fe71e120126 17-19,22,25,28
+ai-specialist/AI_CIKTI_SOZLESMESI.md
+  s_cf34e0b868e106::t_ec3b47fb462242 188-189,195,197-200,205-230
+AI_CONTEXT/3_ai_prompts.md
+  s_cf34e0b868e106::t_1d9bb6f041f056 20-22,24,26-34,37-41,49-51
+  s_cf34e0b868e106::t_7272868f9e77bd 101-102,105-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "b32961fd46900a598b0834fc7aa47d3b699ba57a",
+  "prompts": {},
+  "humans": {
+    "h_2277fbb51c620f": {
+      "author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  },
+  "sessions": {
+    "s_cf34e0b868e106": {
+      "agent_id": {
+        "tool": "github-copilot-jetbrains",
+        "id": "1780915477398",
+        "model": "unknown"
+      },
+      "human_author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  }
+}
