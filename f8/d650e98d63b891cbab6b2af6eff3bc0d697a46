@@ -1,0 +1,37 @@
+backend/src/main/java/com/hackathon/dto/AiResult.java
+  s_cf34e0b868e106::t_13586bd76a8c22 1-78
+backend/src/main/java/com/hackathon/service/AiService.java
+  s_cf34e0b868e106::t_214a56483a7ce2 206-211,217,219,222-227,233-234,236,329
+  s_cf34e0b868e106::t_e2d295eb8a509d 1-205,212-216,218,220-221,228-232,235,237-328,330
+backend/src/main/java/com/hackathon/dto/SprintReview.java
+  s_cf34e0b868e106::t_70a27572dd970a 1-43
+backend/src/main/java/com/hackathon/dto/BlockerSuggestion.java
+  s_cf34e0b868e106::t_af87fa8daa4ab0 1-41
+backend/src/main/java/com/hackathon/dto/SizePredictionResponse.java
+  s_cf34e0b868e106::t_308d6d32a631a4 1-53
+backend/src/main/java/com/hackathon/dto/DecomposeResponse.java
+  s_cf34e0b868e106::t_1c06cf2249f162 1-56
+backend/src/main/java/com/hackathon/dto/PredictSizeInput.java
+  s_cf34e0b868e106::t_a369269b019b5a 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f8d650e98d63b891cbab6b2af6eff3bc0d697a46",
+  "prompts": {},
+  "humans": {
+    "h_2277fbb51c620f": {
+      "author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  },
+  "sessions": {
+    "s_cf34e0b868e106": {
+      "agent_id": {
+        "tool": "github-copilot-jetbrains",
+        "id": "1780915477398",
+        "model": "unknown"
+      },
+      "human_author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  }
+}
