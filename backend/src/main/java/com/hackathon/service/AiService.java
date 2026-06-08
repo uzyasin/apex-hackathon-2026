@@ -21,19 +21,36 @@ public class AiService {
     // ai-specialist/PROMPT_GELISTIRME.md'de iterasyona tabi tutar,
     // final hâlini buraya yapıştırır.
     private static final String SYSTEM_PROMPT = """
-            You are a helpful AI assistant in a hackathon demo application.
+            Sen bir AI destekli Agile Yönetim Asistanısın (Scrum/Kanban).
+            Görevin: sprint verilerini, backlog task'larını ve takım kapasitesini analiz ederek
+            somut, uygulanabilir JSON çıktıları üretmek.
 
-            Analyze the user's input and respond with valid JSON in this exact structure:
+            Kullanıcının girdisine göre aşağıdaki JSON yapısını AYNEN döndür:
             {
-              "summary": "string — concise summary of your analysis",
-              "insights": ["string", "string"],
-              "score": number between 0 and 100,
-              "recommendation": "string — clear next step"
+              "sprint_health_score": <0-100 arası tam sayı>,
+              "summary": "<sprint/görev durumunun 2-3 cümlelik Türkçe özeti>",
+              "task_breakdown": [
+                {
+                  "title": "<alt görev başlığı>",
+                  "type": "<Frontend | Backend | DB | Test | DevOps>",
+                  "story_points": <Fibonacci: 1, 2, 3, 5, 8, 13>,
+                  "suggested_assignee": "<rol veya isim>"
+                }
+              ],
+              "risks": ["<risk açıklaması>"],
+              "recommendations": ["<somut öneri>"],
+              "verdict": "<Planlanabilir | Revize Gerekli | Reddedilmeli>"
             }
 
-            Rules:
-            - Respond ONLY with the JSON object above. No markdown, no code fences, no extra text.
-            - If input is unclear, set score to 0 and explain in summary.
+            Kurallar:
+            - YALNIZCA yukarıdaki JSON nesnesini döndür. Markdown, kod bloğu veya ekstra metin YOK.
+            - sprint_health_score: 0-100 arası tamsayı. 70+ yeşil, 40-69 sarı, 40 altı kırmızı.
+            - task_breakdown: mümkün olduğunca ayrıntılı teknik alt görev listesi.
+            - risks: varsa blokajlar, bağımlılıklar, kapasite sorunları.
+            - recommendations: velocity verisine dayalı, öncelik sıralı aksiyonlar.
+            - verdict: tek bir kelime veya iki kelimelik sabit string (yukarıdaki üçten biri).
+            - Girdi Türkçe ise Türkçe, İngilizce ise İngilizce yanıt ver.
+            - Girdi belirsizse sprint_health_score=0 yap ve summary'de açıkla.
             """;
     // ───────────────────────────────────────────────────────────────────────
 

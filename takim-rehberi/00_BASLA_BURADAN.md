@@ -123,21 +123,29 @@ Bu proje **Java 21 + Spring Boot 3.2.5** kullanır.
 
 Yarışma günü ilk feature'ın **nasıl** ekipten geçtiğini bilmek kritik. İşte örnek senaryo:
 
-### Senaryo: "Akıllı CV Değerlendirme" konusu verildi
+### Senaryo: "AI-Powered Agile Manager" konusu verildi
 
 #### T+0:00 — Konu açıklanır
 Hepiniz birlikte konuyu okur, ürünü tartışır, MVP'yi netleştirirsiniz.
 
-**Karar:** Kullanıcı CV metnini yazar → AI puanlar → ekrana skor + öneri çıkar.
+**Karar:** Kullanıcı sprint backlog'unu ve takım velocity verisini girer → AI sprint planını analiz eder, görevleri alt görevlere kırar, atama önerir → ekranda sprint sağlık skoru + öneri çıkar.
 
 #### T+0:10 — AI Uzmanı çıktı sözleşmesini tanımlar
 ```json
 {
-  "score": 85,
-  "summary": "string",
-  "strengths": ["string"],
-  "gaps": ["string"],
-  "verdict": "Mülakata Çağır" veya "Reddet"
+  "sprint_health_score": 78,
+  "summary": "Sprint kapasitesi aşıldı, 2 task blokaj riski taşıyor.",
+  "task_breakdown": [
+    {
+      "title": "Velocity hesaplama servisi",
+      "type": "Backend",
+      "story_points": 5,
+      "suggested_assignee": "Backend Geliştirici"
+    }
+  ],
+  "risks": ["Kapasite aşımı: 42 puan planlandı, velocity 34"],
+  "recommendations": ["En az öncelikli 2 task'ı sonraki sprint'e taşı"],
+  "verdict": "Revize Gerekli"
 }
 ```
 
@@ -146,7 +154,7 @@ Hepiniz birlikte konuyu okur, ürünü tartışır, MVP'yi netleştirirsiniz.
 #### T+0:15 — Backend mimarisini ve DB şemasını yazar
 `AI_CONTEXT/2_architecture.md`'ye:
 - Tablo: `analyses(id, input, context, result_json, score, created_at)` — zaten boilerplate'te var
-- Ek tablo: `positions(id, title, requirements)` — yeni eklenecek
+- Ek tablo: `sprints(id, name, velocity, start_date, end_date)` — yeni eklenecek
 - Endpoint: `POST /api/analyze`, `GET /api/results` zaten var; eklenecekler de yazılır
 
 **Bildirir:** "Mimari hazır, ben DbService'e yeni tablo ekleyip ApiController'a endpoint yazmaya başlıyorum."
@@ -159,8 +167,10 @@ Hepiniz birlikte konuyu okur, ürünü tartışır, MVP'yi netleştirirsiniz.
 
 #### T+0:45 — AI Uzmanı ilk testini geçer
 ```bash
-curl -X POST localhost:3001/api/analyze -d '{"input": "Yasin, 5 yıl Java"}'
-# → {"success":true,"data":{"score":75,"verdict":"...","strengths":[...]}}
+curl -X POST localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Sprint: 3 task, toplam 21 puan. Takım velocity: 18. Task 1: Auth servisi (8p), Task 2: Dashboard UI (8p), Task 3: DB migrasyon (5p)."}'
+# → {"success":true,"data":{"sprint_health_score":62,"verdict":"Revize Gerekli","task_breakdown":[...]}}
 ```
 **Commit ve push:** `git commit -m "feat(ai): v1 prompt"`
 

@@ -14,7 +14,6 @@ Every second matters. You write clean, complete, production-ready code on the fi
 - **HTTP client to Anthropic:** `RestTemplate`
 - **AI SDK:** None — Anthropic API'ye direkt HTTP POST
 - **Database:** H2 in-memory + `JdbcTemplate` (zero-config)
-- **PDF Parsing:** Apache PDFBox 3.x
 - **Validation:** `jakarta.validation` (`@Valid`, `@NotBlank`, `@Size`)
 - **Boilerplate reducer:** Lombok (`@Data`, `@AllArgsConstructor`, `@NoArgsConstructor`)
 
@@ -50,6 +49,10 @@ Every second matters. You write clean, complete, production-ready code on the fi
 
 6. **Be Concise in Explanation:** Show the code immediately.
    One sentence of context is enough — no long essays before the code block.
+
+7. **Do NOT create .md files:** Do not create .md files until i ask.
+
+8. **Do NOT create UNIT TESTS:** Do not create unit tests until i ask.
 
 ---
 

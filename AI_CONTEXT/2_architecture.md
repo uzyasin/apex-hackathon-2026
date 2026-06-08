@@ -5,10 +5,24 @@
 
 ## Product Summary
 **What does this app do?**
-> [FILL IN: One sentence description of the product]
-
-**Core User Flow:**
-> [FILL IN: User does X → system does Y → user sees Z]
+IFTS AI Hackathon: AI-Powered Agile Manager
+Tema: Yapay Zeka Destekli Akıllı Scrum/Kanban Asistanı ve Yönetim Paneli
+Hedef: Geleneksel Scrum/Kanban süreçlerindeki sprint planlama ve raporlama iş yükünü optimize ederek, takımların tamamen "kod geliştirmeye" ve "değer üretmeye" odaklanmasını sağlamak.
+📋 Beklenen Ana Özellikler (Epikler)
+Yarışmacıların geliştireceği MVP (Minimum Uygulanabilir Ürün), aşağıdaki üç ana yeteneğe sahip olmalıdır:
+• 1. Akıllı Planlama (Predictive Planning):
+o Jira backlog'undan seçilen task’ları ve size’larını okuyabilmeli. (Jira üzerinde bir yazma işlemi yapılmamalıdır, sadece okuma.)
+o Takımın geçmiş sprint verilerini (hız/velocity) analiz ederek, backlog’dan planlamaya dahil edilen yeni task’ların size’ları için objektif yapay zeka tahmini (Predictive Sizing) yapabilmeli.
+o Bonus: Task’ların bloklanma nedenlerine AI desteği için çözümler önerebilmeli.
+• 2. Otomatik Görev Kırılımı ve Akıllı Atama (Task Decomposition):
+o Planlamaya dahil edilen bir task’ı saniyeler içinde mantıklı teknik alt görevlere (Frontend, Backend, DB, Test vb.) bölmeli.
+o Takım üyelerinin yetkinlik matrisine ve mevcut sprint yüklerine (kapasite) bakarak, görevleri en uygun kişilere akıllı eşleştirme ile en uygun atamayı önermeli.
+o Oluşturulan bu alt görevleri ve atama önerilerini rapor olarak sunabilmeli.
+• 3. AI Sprint Review ve Yönetici Paneli (Dashboard):
+o "Bu Sprint Ne Başardık?" odaklı otomatik bir demo raporu ve özet metni üretmeli.
+o Planlanan vs. Gerçekleşen (Süre/Puan) sapma metriklerini görselleştiren bir dashboard sunmalı.
+o Bonus: Gerçekleştirilemeyen task’lar için sprint’ler arası geçişkenlik (sonraki sprint’lere kalma durumu) metriği hesaplamalı.
+o Bonus: Sprint için 1-100 skalasında sprint-health skoru hesaplamalı.
 
 ---
 
@@ -105,10 +119,29 @@ hackathon/
 ## AI Integration
 - **Provider:** Anthropic Claude (via direct HTTP POST with `RestTemplate`)
 - **Model:** `claude-sonnet-4-6`
-- **Primary feature:** [FILL IN: e.g., document analysis / text classification / RAG]
-- **Input format:** [FILL IN: plain text / JSON / file upload]
-- **Output format:** JSON with fields: `{ summary, insights, score, recommendation }` (AiResult DTO)
+- **Primary feature:** Sprint analizi, task decomposition, sprint review raporu
+- **Input format:** Serbest metin (sprint verileri, backlog task'ları, takım hız geçmişi)
+- **Output format:** JSON — `AiResult` DTO (aşağıya bakın)
 - **Fallback:** API hata verirse `AiResult.fallback()` (statik yanıt) döner
+
+### AI Çıktı Şeması (AiResult DTO)
+```json
+{
+  "sprint_health_score": 78,
+  "summary": "Sprint durumu kısa özeti (2-3 cümle)",
+  "task_breakdown": [
+    {
+      "title": "Alt görev adı",
+      "type": "Frontend | Backend | DB | Test | DevOps",
+      "story_points": 3,
+      "suggested_assignee": "Rol veya isim"
+    }
+  ],
+  "risks": ["Risk açıklaması"],
+  "recommendations": ["Öneri açıklaması"],
+  "verdict": "Planlanabilir | Revize Gerekli | Reddedilmeli"
+}
+```
 
 ---
 

@@ -110,26 +110,76 @@ Yarışmanın ilk 15-20 dakikasında bu dosyayı ekiple birlikte netleştir.
 
 ---
 
-## Seçilen Sözleşme (Burası Doldurulacak)
+## Seçilen Sözleşme — AI-Powered Agile Manager
 
 ```
 ÜRÜNÜMÜZDEKİ AKTİF SÖZLEŞME:
+Konu: AI Destekli Scrum/Kanban Asistanı ve Sprint Yönetim Paneli
 ```
 
-**Alan adları ve tipleri:**
+**AI'dan gelen yanıt (POST /api/analyze → response.data):**
+```json
+{
+  "sprint_health_score": 78,
+  "summary": "Sprint kapasitesi %85 dolu. Belirlenen 3 task teknik bağımlılık içeriyor, önce Backend alt görevleri tamamlanmalı.",
+  "task_breakdown": [
+    {
+      "title": "Kullanıcı kimlik doğrulama API'si",
+      "type": "Backend",
+      "story_points": 5,
+      "suggested_assignee": "Backend Geliştirici"
+    },
+    {
+      "title": "Login formu ve hata mesajları",
+      "type": "Frontend",
+      "story_points": 3,
+      "suggested_assignee": "Frontend Geliştirici"
+    },
+    {
+      "title": "users tablosu ve migrasyon scripti",
+      "type": "DB",
+      "story_points": 2,
+      "suggested_assignee": "Backend Geliştirici"
+    }
+  ],
+  "risks": [
+    "Frontend görevi Backend API tamamlanmadan başlayamaz (bağımlılık).",
+    "Takım velocity'si geçen sprint 34 puan — bu sprint 42 puan planlandı, kapasite aşımı riski var."
+  ],
+  "recommendations": [
+    "Backend ve DB görevlerini sprint'in ilk 2 gününe al.",
+    "42 puanlık yük 34'e düşürülmeli; en az öncelikli 2 task sonraki sprint'e taşı.",
+    "Blokaj durumunda Daily Scrum'da 15 dk ek zaman planla."
+  ],
+  "verdict": "Revize Gerekli"
+}
+```
+
+**Alan Tanımları:**
 
 | Alan | Tip | Zorunlu | Açıklama |
 |------|-----|---------|----------|
-| `[ALAN_1]` | [tip] | [E/H] | [açıklama] |
-| `[ALAN_2]` | [tip] | [E/H] | [açıklama] |
-| `[ALAN_3]` | [tip] | [E/H] | [açıklama] |
+| `sprint_health_score` | integer, 0-100 | E | Sprint sağlığı. 70+ yeşil, 40-69 sarı, <40 kırmızı |
+| `summary` | string | E | 2-3 cümlelik Türkçe sprint/görev özeti |
+| `task_breakdown` | object[] | E | Görevin teknik alt görev listesi |
+| `task_breakdown[].title` | string | E | Alt görev adı |
+| `task_breakdown[].type` | string | E | Frontend / Backend / DB / Test / DevOps |
+| `task_breakdown[].story_points` | integer (Fibonacci) | E | Tahmin edilen efor (1,2,3,5,8,13) |
+| `task_breakdown[].suggested_assignee` | string | E | Önerilen atama (rol veya isim) |
+| `risks` | string[] | E | Tespit edilen riskler ve blokajlar |
+| `recommendations` | string[] | E | Öncelik sıralı somut aksiyonlar |
+| `verdict` | string | E | "Planlanabilir" \| "Revize Gerekli" \| "Reddedilmeli" |
 
 **Frontend'de her alan nerede gösterilecek:**
 
 | Alan | Bileşen | Görünüm |
 |------|---------|---------|
-| `[ALAN_1]` | [component adı] | [ÖRN: büyük skor sayısı] |
-| `[ALAN_2]` | [component adı] | [ÖRN: açıklama kutusu] |
+| `sprint_health_score` | `SprintHealthGauge` | Büyük yuvarlak skor, renk kodlu (yeşil/sarı/kırmızı) |
+| `summary` | `SummaryCard` | Açıklama kutusu, sol üst |
+| `task_breakdown` | `TaskBreakdownTable` | Tablo: görev adı, tip rozeti, puan, atanan kişi |
+| `risks` | `RiskList` | Kırmızı uyarı ikonlu madde listesi |
+| `recommendations` | `RecommendationList` | Mavi öneri ikonlu madde listesi |
+| `verdict` | `VerdictBadge` | Büyük renkli rozet (yeşil/sarı/kırmızı) |
 
 ---
 
