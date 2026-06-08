@@ -1,0 +1,24 @@
+backend/src/main/java/com/hackathon/controller/AiController.java
+  s_cf34e0b868e106::t_d4ac34345bca58 1-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0030e3b33d2507d6ff77a7ca394b2a345660a8da",
+  "prompts": {},
+  "humans": {
+    "h_2277fbb51c620f": {
+      "author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  },
+  "sessions": {
+    "s_cf34e0b868e106": {
+      "agent_id": {
+        "tool": "github-copilot-jetbrains",
+        "id": "1780915477398",
+        "model": "unknown"
+      },
+      "human_author": "yasinuz <yasin.uz@turkcell.com.tr>"
+    }
+  }
+}
