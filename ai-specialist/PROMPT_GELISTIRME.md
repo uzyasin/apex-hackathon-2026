@@ -14,16 +14,18 @@ Bu dosyayı şu döngüyle kullan:
 ## Ürün Tanımı (İlk 5 dakikada doldur)
 
 **Ürün ne yapıyor?**
-> [DOLDUR: Kullanıcı ___ giriyor, sistem ___ döndürüyor]
+> Kullanıcı sprint/backlog verilerini giriyor, sistem AI ile sprint sağlığı, story point
+> tahmini, görev kırılımı, blokaj çözümü ve sprint review raporu döndürüyor.
+> (AI Destekli Scrum/Kanban Asistanı ve Yönetim Paneli.)
 
 **AI'dan beklenen temel görev:**
-> [DOLDUR: Sınıflandırma mı? Özetleme mi? Analiz mi? Üretim mi?]
+> Analiz + Tahmin + Üretim: sprint analizi, predictive sizing, task decomposition, sprint review.
 
 **Girdi tipi:**
-> [ ] Serbest metin &nbsp;&nbsp; [ ] Belge (PDF/TXT) &nbsp;&nbsp; [ ] Form verisi &nbsp;&nbsp; [ ] Görsel
+> [x] Serbest metin (sprint/backlog) &nbsp;&nbsp; [x] Form verisi (issue alanları) &nbsp;&nbsp; [ ] Görsel
 
 **Çıktı tipi:**
-> [ ] Skor + açıklama &nbsp;&nbsp; [ ] Kategori &nbsp;&nbsp; [ ] Özet &nbsp;&nbsp; [ ] Öneri listesi &nbsp;&nbsp; [ ] Ham metin
+> [x] Skor + açıklama &nbsp;&nbsp; [x] Öneri listesi &nbsp;&nbsp; [x] Yapısal JSON (DTO başına)
 
 ---
 
@@ -123,11 +125,45 @@ curl -X POST http://localhost:3001/api/analyze \
 
 ## ✅ AKTİF PROMPT — AiService.SYSTEM_PROMPT'a bu yapıştırıldı
 
-> Son güncelleme: ___:___
+> Son güncelleme: rebase sonrası — main üzerine kuruldu, 5 prompt aktif.
 
-**System Prompt (FINAL):**
+AiService artık TEK bir SYSTEM_PROMPT yerine özellik başına ayrı text-block sabitleri kullanır:
+
+| Sabit | Endpoint | Çıktı DTO |
+|-------|----------|-----------|
+| `ANALYZE_PROMPT` | `POST /api/analyze` | `AiResult` |
+| `PREDICT_SIZE_PROMPT` | `POST /api/planning/predict-size` | `SizePredictionResponse` |
+| `BLOCKER_PROMPT` | `POST /api/planning/blockers` | `BlockerSuggestion` |
+| `DECOMPOSE_PROMPT` | `POST /api/tasks/decompose` | `DecomposeResponse` |
+| `REVIEW_PROMPT` | `GET /api/sprint/{id}/review` | `SprintReview` |
+
+Tüm prompt'lar ortak `callClaude(systemPrompt, userContent, type, fallback)` jenerik
+metodundan geçer (markdown temizleme + JSON parse + DTO fallback tek noktada).
+
+**ANALYZE_PROMPT (FINAL):**
 ```
-[BURAYA FINAL PROMPT'U YAZ — bunu AiService.java'daki SYSTEM_PROMPT text block'una kopyala]
+Sen bir AI destekli Agile Yönetim Asistanısın (Scrum/Kanban).
+Görevin: sprint verilerini, backlog task'larını ve takım kapasitesini analiz ederek
+somut, uygulanabilir bir JSON çıktısı üretmek.
+
+YALNIZCA şu JSON nesnesini döndür:
+{
+  "sprint_health_score": <0-100 tam sayı>,
+  "summary": "<2-3 cümle Türkçe özet>",
+  "task_breakdown": [
+    { "title": "...", "type": "Frontend|Backend|DB|Test|DevOps",
+      "story_points": <1,2,3,5,8,13>, "suggested_assignee": "<rol/isim>" }
+  ],
+  "risks": ["..."],
+  "recommendations": ["..."],
+  "verdict": "Planlanabilir | Revize Gerekli | Reddedilmeli"
+}
+
+Kurallar:
+- YALNIZCA JSON döndür. Markdown veya kod bloğu (```) YOK.
+- story_points yalnızca Fibonacci (1,2,3,5,8,13).
+- Girdi Türkçe ise Türkçe yanıt ver.
+- Girdi belirsiz/alakasızsa sprint_health_score=0 yap ve summary'de açıkla.
 ```
 
 **Java text block örneği:**

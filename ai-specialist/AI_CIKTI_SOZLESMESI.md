@@ -185,21 +185,49 @@ Konu: AI Destekli Scrum/Kanban Asistanı ve Sprint Yönetim Paneli
 
 ## Fallback (API Hata Verirse)
 
-Bu değerler `AiResult.java` içindeki `fallback()` static method'una girilir.
+Her AI çıktı DTO'sunun kendi `fallback()` static method'u vardır.
+`AiService.callClaude()` exception yakaladığında otomatik ilgili fallback'i döner.
 Uygulama hiçbir zaman boş ekran göstermez.
 
 ```java
 public static AiResult fallback() {
     AiResult r = new AiResult();
+    r.setSprintHealthScore(0);
     r.setSummary("Analiz şu an kullanılamıyor. Lütfen tekrar deneyin.");
-    r.setInsights(List.of());
-    r.setScore(0);
-    r.setRecommendation("Birkaç saniye sonra tekrar dene.");
+    r.setTaskBreakdown(List.of());
+    r.setRisks(List.of("AI servisi geçici olarak yanıt vermiyor."));
+    r.setRecommendations(List.of("Birkaç saniye sonra tekrar dene."));
+    r.setVerdict("Revize Gerekli");
     return r;
 }
 ```
 
-`AiService.callClaude()` exception yakaladığında otomatik bu fallback'i döner.
+Diğer DTO'lar: `SizePredictionResponse.fallback()`, `BlockerSuggestion.fallback(key)`,
+`DecomposeResponse.fallback(parentKey, parentSummary)`, `SprintReview.fallback(sprintId)`.
+
+---
+
+## AI Üreten Diğer Endpoint'ler (AiService Metotları)
+
+`/api/analyze` dışında, sözleşmedeki dört AI endpoint'i `AiService` üzerinden üretilir.
+Çıktılar `contract/mocks/*.json` ile birebir uyumludur.
+
+| Endpoint | AiService Metodu | Çıktı DTO |
+|----------|------------------|-----------|
+| `POST /api/planning/predict-size` | `predictSizes(PredictSizeInput)` | `SizePredictionResponse` |
+| `POST /api/planning/blockers` | `suggestBlockers(issueKey, summary, description, blockerReason)` | `BlockerSuggestion` |
+| `POST /api/tasks/decompose` | `decompose(issueKey, summary, description, storyPoints)` | `DecomposeResponse` |
+| `GET /api/sprint/{id}/review` | `generateReview(sprintId, sprintContext)` | `SprintReview` |
+
+**Backend'in sağlaması gereken bağlam (önemli):**
+- `predictSizes`: `PredictSizeInput` içine her issue'nun `key/summary/description/currentStoryPoints`
+  alanlarını VE `velocityContext` (geçmiş hız özeti düz metin) doldur. AI objektif tahmini buradan üretir.
+- `generateReview`: `sprintContext` parametresine sprint adı, hedef, planlanan/tamamlanan puan ve
+  tamamlanan (DONE) issue başlıklarını düz metin ver. AI yalnızca verilen veriden üretir, uydurmaz.
+
+> Not: `/api/analyze` çıktısı artık sprint şemasıdır (`sprint_health_score, summary,
+> task_breakdown, risks, recommendations, verdict`). `ApiController.analyze` mapping'i buna göre
+> güncellendi; eski `insights/score/recommendation` alanları kaldırıldı.
 
 ---
 

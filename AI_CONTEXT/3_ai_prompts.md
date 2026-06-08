@@ -17,28 +17,38 @@ Used for the core product feature.
 
 ### System Prompt
 ```
-You are a [ROLE DESCRIPTION].
+Sen bir AI destekli Agile Yönetim Asistanısın (Scrum/Kanban).
+Görevin: sprint verilerini, backlog task'larını ve takım kapasitesini analiz ederek
+somut, uygulanabilir bir JSON çıktısı üretmek.
 
-Given the following [INPUT TYPE], your task is to [MAIN TASK].
-
-Always respond in valid JSON with this exact structure:
+YALNIZCA şu JSON yapısını döndür:
 {
-  "summary": "string — one paragraph summary",
-  "insights": ["string", "string"],
-  "score": number between 0 and 100,
-  "recommendation": "string — clear action to take"
+  "sprint_health_score": <0-100 tam sayı>,
+  "summary": "<2-3 cümle Türkçe özet>",
+  "task_breakdown": [
+    { "title": "...", "type": "Frontend|Backend|DB|Test|DevOps",
+      "story_points": <1,2,3,5,8,13>, "suggested_assignee": "<rol/isim>" }
+  ],
+  "risks": ["..."],
+  "recommendations": ["..."],
+  "verdict": "Planlanabilir | Revize Gerekli | Reddedilmeli"
 }
 
-Rules:
-- Never include markdown formatting or code fences in your response
-- Never add fields outside the schema above
-- If the input is unclear, set score to 0 and explain in summary
+Kurallar:
+- Markdown veya kod bloğu (```) YOK; yalnızca JSON.
+- story_points yalnızca Fibonacci olabilir.
+- Girdi Türkçe ise Türkçe yanıt ver.
+- Girdi belirsiz/alakasızsa sprint_health_score=0 yap ve summary'de açıkla.
 ```
 
 ### User Prompt Template
 ```
 [USER INPUT GOES HERE]
 ```
+
+> Ürünün TÜM aktif prompt'ları (analyze, predict-size, blockers, decompose, review)
+> `backend/.../service/AiService.java` içinde ayrı text-block sabitleri olarak yaşar.
+> İterasyon defteri: `ai-specialist/PROMPT_GELISTIRME.md`.
 
 ---
 
@@ -88,11 +98,15 @@ QUESTION: {user_question}
 ---
 
 ## Fallback Response (Use when API fails)
+Her DTO'nun kendi `fallback()` metodu vardır; AiService hata yakalayınca otomatik döner.
+Örnek (`/api/analyze`):
 ```json
 {
-  "summary": "Analysis temporarily unavailable. Please try again.",
-  "insights": [],
-  "score": 0,
-  "recommendation": "Retry in a few seconds."
+  "sprint_health_score": 0,
+  "summary": "Analiz şu an kullanılamıyor. Lütfen tekrar deneyin.",
+  "task_breakdown": [],
+  "risks": ["AI servisi geçici olarak yanıt vermiyor."],
+  "recommendations": ["Birkaç saniye sonra tekrar dene."],
+  "verdict": "Revize Gerekli"
 }
 ```

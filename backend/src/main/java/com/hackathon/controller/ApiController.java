@@ -44,10 +44,12 @@ public class ApiController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("id", id);
+        data.put("sprint_health_score", result.getSprintHealthScore());
         data.put("summary", result.getSummary());
-        data.put("insights", result.getInsights());
-        data.put("score", result.getScore());
-        data.put("recommendation", result.getRecommendation());
+        data.put("task_breakdown", result.getTaskBreakdown());
+        data.put("risks", result.getRisks());
+        data.put("recommendations", result.getRecommendations());
+        data.put("verdict", result.getVerdict());
         return ResponseEntity.ok(ApiResponse.ok(data));
     }
 
@@ -60,7 +62,7 @@ public class ApiController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getById(@PathVariable Long id) {
         Map<String, Object> row = dbService.getAnalysisById(id);
         if (row == null) {
-            return ResponseEntity.status(404).body(ApiResponse.fail("Kayıt bulunamadı"));
+            return ResponseEntity.status(404).body(ApiResponse.fail("KayÄ±t bulunamadÄ±"));
         }
         return ResponseEntity.ok(ApiResponse.ok(row));
     }
@@ -68,7 +70,7 @@ public class ApiController {
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<Map<String, Object>>> upload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.fail("Dosya yüklenmedi"));
+            return ResponseEntity.badRequest().body(ApiResponse.fail("Dosya yÃ¼klenmedi"));
         }
         try {
             String text = documentService.extractText(file);
@@ -79,16 +81,16 @@ public class ApiController {
             data.put("text", preview);
             return ResponseEntity.ok(ApiResponse.ok(data));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.fail("Dosya işlenemedi: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(ApiResponse.fail("Dosya iÅŸlenemedi: " + e.getMessage()));
         }
     }
 
-    // ─── YENİ ENDPOINT'LER BURAYA ──────────────────────────────────────────
-    // Şablon:
+    // â”€â”€â”€ YENÄ° ENDPOINT'LER BURAYA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Åžablon:
     // @PostMapping("/your-feature")
     // public ResponseEntity<ApiResponse<YourDto>> yourFeature(@Valid @RequestBody YourRequest req) {
     //   ...
     //   return ResponseEntity.ok(ApiResponse.ok(result));
     // }
-    // ──────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 }
