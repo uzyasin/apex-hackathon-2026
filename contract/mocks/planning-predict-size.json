@@ -1,0 +1,28 @@
+{
+  "predictions": [
+    {
+      "key": "PROJ-201",
+      "summary": "Kullanıcı şifre sıfırlama e-posta akışı",
+      "currentStoryPoints": null,
+      "predictedStoryPoints": 5,
+      "confidence": "MEDIUM",
+      "rationale": "Benzer auth akışları (PROJ-145, PROJ-162) 4-6 puan arasında tamamlandı. E-posta template ve token validasyonu ek karmaşıklık ekliyor."
+    },
+    {
+      "key": "PROJ-203",
+      "summary": "Sipariş geçmişi API endpoint",
+      "currentStoryPoints": null,
+      "predictedStoryPoints": 5,
+      "confidence": "HIGH",
+      "rationale": "Sayfalı liste endpoint'leri ekipte 4-6 puan normu. Sipariş ilişkisi zaten DB'de mevcut, düşük belirsizlik."
+    },
+    {
+      "key": "PROJ-205",
+      "summary": "Redis önbellek entegrasyonu — ürün listesi",
+      "currentStoryPoints": null,
+      "predictedStoryPoints": 8,
+      "confidence": "LOW",
+      "rationale": "Redis altyapısı henüz kurulmadı. Devops kurulum + uygulama entegrasyonu ilk kez yapılıyor, belirsizlik yüksek."
+    }
+  ]
+}
