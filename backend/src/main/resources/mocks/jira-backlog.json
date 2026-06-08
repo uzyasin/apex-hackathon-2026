@@ -1,0 +1,62 @@
+[
+  {
+    "key": "PROJ-201",
+    "summary": "Kullanıcı şifre sıfırlama e-posta akışı",
+    "issueType": "Story",
+    "status": "To Do",
+    "statusCategory": "TODO",
+    "storyPoints": null,
+    "assignee": null,
+    "priority": "High",
+    "labels": ["auth", "email"],
+    "description": "Kullanıcı şifresini unuttuğunda e-posta ile sıfırlama bağlantısı gönderilmeli. Bağlantı 24 saat geçerli olmalı."
+  },
+  {
+    "key": "PROJ-202",
+    "summary": "Ürün arama filtresi — fiyat aralığı",
+    "issueType": "Story",
+    "status": "To Do",
+    "statusCategory": "TODO",
+    "storyPoints": 3,
+    "assignee": null,
+    "priority": "Medium",
+    "labels": ["search", "ui"],
+    "description": "Ürün listesi sayfasında min-max fiyat slider bileşeni ile filtreleme yapılabilmeli."
+  },
+  {
+    "key": "PROJ-203",
+    "summary": "Sipariş geçmişi API endpoint",
+    "issueType": "Story",
+    "status": "To Do",
+    "statusCategory": "TODO",
+    "storyPoints": null,
+    "assignee": null,
+    "priority": "High",
+    "labels": ["api", "orders"],
+    "description": "GET /api/orders endpoint'i kullanıcının tüm siparişlerini sayfalı döndürmeli."
+  },
+  {
+    "key": "PROJ-204",
+    "summary": "Admin paneli kullanıcı yönetimi tablosu",
+    "issueType": "Story",
+    "status": "To Do",
+    "statusCategory": "TODO",
+    "storyPoints": 8,
+    "assignee": null,
+    "priority": "Low",
+    "labels": ["admin", "ui"],
+    "description": "Admin panelinde kullanıcıları listeleme, arama ve pasife alma işlemleri."
+  },
+  {
+    "key": "PROJ-205",
+    "summary": "Redis önbellek entegrasyonu — ürün listesi",
+    "issueType": "Story",
+    "status": "To Do",
+    "statusCategory": "TODO",
+    "storyPoints": null,
+    "assignee": null,
+    "priority": "Medium",
+    "labels": ["performance", "backend"],
+    "description": "Ürün listesi sorgusunu Redis cache ile 5 dakika önbelleğe al."
+  }
+]

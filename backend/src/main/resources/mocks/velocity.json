@@ -1,0 +1,30 @@
+{
+  "averageVelocity": 23.5,
+  "trend": "stable",
+  "sprints": [
+    {
+      "sprintId": 99,
+      "name": "Sprint 10",
+      "committedPoints": 22,
+      "completedPoints": 20
+    },
+    {
+      "sprintId": 100,
+      "name": "Sprint 11",
+      "committedPoints": 28,
+      "completedPoints": 21
+    },
+    {
+      "sprintId": 101,
+      "name": "Sprint 12",
+      "committedPoints": 26,
+      "completedPoints": 24
+    },
+    {
+      "sprintId": 102,
+      "name": "Sprint 13",
+      "committedPoints": 24,
+      "completedPoints": 26
+    }
+  ]
+}

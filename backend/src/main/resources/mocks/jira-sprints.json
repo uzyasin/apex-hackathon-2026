@@ -1,0 +1,34 @@
+[
+  {
+    "id": 101,
+    "name": "Sprint 12",
+    "state": "closed",
+    "startDate": "2026-05-01",
+    "endDate": "2026-05-14",
+    "goal": "Ödeme akışını tamamla ve kullanıcı profili API'lerini yayınla"
+  },
+  {
+    "id": 102,
+    "name": "Sprint 13",
+    "state": "closed",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-28",
+    "goal": "Bildirim modülü ve dashboard v1"
+  },
+  {
+    "id": 103,
+    "name": "Sprint 14",
+    "state": "active",
+    "startDate": "2026-05-29",
+    "endDate": "2026-06-11",
+    "goal": "Raporlama ekranları ve performans iyileştirmeleri"
+  },
+  {
+    "id": 104,
+    "name": "Sprint 15",
+    "state": "future",
+    "startDate": "2026-06-12",
+    "endDate": "2026-06-25",
+    "goal": null
+  }
+]

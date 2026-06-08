@@ -166,6 +166,11 @@ public class AiService {
             """;
     // ───────────────────────────────────────────────────────────────────────
 
+    // ─── Aktif sağlayıcı seçimi: "deepseek" | "anthropic" ───────────────────
+    @Value("${ai.provider:deepseek}")
+    private String provider;
+
+    // ─── Anthropic ayarları ────────────────────────────────────────────────
     @Value("${anthropic.api-key}")
     private String apiKey;
 
@@ -174,6 +179,19 @@ public class AiService {
 
     @Value("${anthropic.max-tokens}")
     private int maxTokens;
+
+    // ─── DeepSeek ayarları (OpenAI uyumlu) ─────────────────────────────────
+    @Value("${deepseek.api-key}")
+    private String deepseekApiKey;
+
+    @Value("${deepseek.base-url:https://api.deepseek.com}")
+    private String deepseekBaseUrl;
+
+    @Value("${deepseek.model:deepseek-chat}")
+    private String deepseekModel;
+
+    @Value("${deepseek.max-tokens:2048}")
+    private int deepseekMaxTokens;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -262,6 +280,51 @@ public class AiService {
     // ═══════════════════════════════════════════════════════════════════════
 
     private <T> T callClaude(String systemPrompt, String userContent, Class<T> type, Supplier<T> fallback) {
+        // Aktif sağlayıcıya göre yönlendir.
+        if ("anthropic".equalsIgnoreCase(provider)) {
+            return callAnthropic(systemPrompt, userContent, type, fallback);
+        }
+        return callDeepSeek(systemPrompt, userContent, type, fallback);
+    }
+
+    /** DeepSeek (OpenAI uyumlu) chat completions çağrısı. */
+    private <T> T callDeepSeek(String systemPrompt, String userContent, Class<T> type, Supplier<T> fallback) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(deepseekApiKey);
+
+            Map<String, Object> body = Map.of(
+                    "model", deepseekModel,
+                    "max_tokens", deepseekMaxTokens,
+                    "messages", List.of(
+                            Map.of("role", "system", "content", systemPrompt),
+                            Map.of("role", "user", "content", userContent)
+                    )
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            String url = deepseekBaseUrl.replaceAll("/+$", "") + "/chat/completions";
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            String text = ((String) message.get("content")).trim();
+
+            // DeepSeek bazen markdown ile sarar — temizle
+            text = stripMarkdownFences(text);
+
+            return objectMapper.readValue(text, type);
+        } catch (Exception e) {
+            System.err.println("[AiService][deepseek] " + type.getSimpleName() + " error: " + e.getMessage());
+            return fallback.get();
+        }
+    }
+
+    /** Anthropic Claude messages çağrısı. */
+    private <T> T callAnthropic(String systemPrompt, String userContent, Class<T> type, Supplier<T> fallback) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -287,7 +350,7 @@ public class AiService {
 
             return objectMapper.readValue(text, type);
         } catch (Exception e) {
-            System.err.println("[AiService] " + type.getSimpleName() + " error: " + e.getMessage());
+            System.err.println("[AiService][anthropic] " + type.getSimpleName() + " error: " + e.getMessage());
             return fallback.get();
         }
     }

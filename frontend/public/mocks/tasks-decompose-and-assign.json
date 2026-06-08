@@ -1,0 +1,110 @@
+{
+  "parentKey": "PROJ-201",
+  "parentSummary": "Kullanıcı şifre sıfırlama e-posta akışı",
+  "subtasks": [
+    {
+      "tempId": "st1",
+      "title": "Şifre sıfırlama token üretimi ve DB kaydı",
+      "discipline": "BACKEND",
+      "estimateHours": 4,
+      "description": "UUID token üret, kullanıcıya bağla, 24 saatlik TTL ile password_reset_tokens tablosuna kaydet."
+    },
+    {
+      "tempId": "st2",
+      "title": "POST /api/auth/forgot-password endpoint",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "description": "E-posta adresi alır, kullanıcıyı doğrular, token üretip e-posta gönderim servisini tetikler."
+    },
+    {
+      "tempId": "st3",
+      "title": "POST /api/auth/reset-password endpoint",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "description": "Token doğrular, süresi dolmuşsa 400 döner, geçerliyse şifreyi günceller ve token'ı geçersiz kılar."
+    },
+    {
+      "tempId": "st4",
+      "title": "password_reset_tokens tablosu migrasyonu",
+      "discipline": "DB",
+      "estimateHours": 2,
+      "description": "id, user_id (FK), token (unique), expires_at, used (bool) alanları ile tablo oluştur."
+    },
+    {
+      "tempId": "st5",
+      "title": "Şifre sıfırlama formu UI bileşeni",
+      "discipline": "FRONTEND",
+      "estimateHours": 4,
+      "description": "E-posta giriş ekranı, başarı mesajı ve yeni şifre giriş ekranı (token URL param üzerinden)."
+    },
+    {
+      "tempId": "st6",
+      "title": "Şifre sıfırlama akışı e2e testi",
+      "discipline": "TEST",
+      "estimateHours": 3,
+      "description": "Geçerli token, süresi dolmuş token ve yanlış token senaryolarını kapsa."
+    }
+  ],
+  "assignments": [
+    {
+      "tempId": "st1",
+      "discipline": "BACKEND",
+      "estimateHours": 4,
+      "suggestedAssignee": { "memberId": "u2", "name": "Veli" },
+      "matchScore": 92,
+      "reason": "BACKEND yetkinliği 5/5, mevcut yük 24/60 saat — kapasite uygun.",
+      "memberLoadAfterHours": 28,
+      "memberCapacityHours": 60
+    },
+    {
+      "tempId": "st2",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "suggestedAssignee": { "memberId": "u2", "name": "Veli" },
+      "matchScore": 89,
+      "reason": "Aynı sprint token servisini yazan Veli bağlamı taşıyor, devam etmesi verimli.",
+      "memberLoadAfterHours": 31,
+      "memberCapacityHours": 60
+    },
+    {
+      "tempId": "st3",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "suggestedAssignee": { "memberId": "u5", "name": "Zeynep" },
+      "matchScore": 78,
+      "reason": "BACKEND yetkinliği 4/5, Veli yük limitine yaklaşıyor, Zeynep'e dağıtılması önerilir.",
+      "memberLoadAfterHours": 13,
+      "memberCapacityHours": 40
+    },
+    {
+      "tempId": "st4",
+      "discipline": "DB",
+      "estimateHours": 2,
+      "suggestedAssignee": { "memberId": "u4", "name": "Can" },
+      "matchScore": 95,
+      "reason": "DB yetkinliği 5/5, bu sprint'teki migration'ları zaten Can yönetiyor.",
+      "memberLoadAfterHours": 32,
+      "memberCapacityHours": 60
+    },
+    {
+      "tempId": "st5",
+      "discipline": "FRONTEND",
+      "estimateHours": 4,
+      "suggestedAssignee": { "memberId": "u3", "name": "Ayşe" },
+      "matchScore": 97,
+      "reason": "FRONTEND yetkinliği 5/5, mevcut yük 8/40 saat — en düşük yüklü frontend geliştiricisi.",
+      "memberLoadAfterHours": 12,
+      "memberCapacityHours": 40
+    },
+    {
+      "tempId": "st6",
+      "discipline": "TEST",
+      "estimateHours": 3,
+      "suggestedAssignee": { "memberId": "u5", "name": "Zeynep" },
+      "matchScore": 91,
+      "reason": "TEST yetkinliği 5/5, st3 ile birlikte çalışırken akışı iyi tanıyor olacak.",
+      "memberLoadAfterHours": 16,
+      "memberCapacityHours": 40
+    }
+  ]
+}

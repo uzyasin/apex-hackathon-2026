@@ -1,0 +1,28 @@
+{
+  "sprintId": 101,
+  "name": "Sprint 12",
+  "startDate": "2026-05-01",
+  "endDate": "2026-05-14",
+  "plannedPoints": 26,
+  "completedPoints": 24,
+  "plannedCount": 6,
+  "completedCount": 5,
+  "deviationPercent": -7.7,
+  "statusBreakdown": {
+    "TODO": 1,
+    "IN_PROGRESS": 0,
+    "DONE": 5
+  },
+  "burndown": [
+    { "date": "2026-05-01", "remaining": 26 },
+    { "date": "2026-05-02", "remaining": 26 },
+    { "date": "2026-05-05", "remaining": 21 },
+    { "date": "2026-05-06", "remaining": 21 },
+    { "date": "2026-05-07", "remaining": 18 },
+    { "date": "2026-05-08", "remaining": 13 },
+    { "date": "2026-05-09", "remaining": 10 },
+    { "date": "2026-05-12", "remaining": 5 },
+    { "date": "2026-05-13", "remaining": 2 },
+    { "date": "2026-05-14", "remaining": 2 }
+  ]
+}

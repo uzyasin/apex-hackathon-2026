@@ -1,0 +1,10 @@
+{
+  "key": "PROJ-205",
+  "rootCause": "Redis altyapısının sunucu ortamında kurulu olmaması ve bağlantı konfigürasyonunun uygulama tarafında tanımlanmamış olması.",
+  "suggestions": [
+    "Docker Compose'a Redis servisi ekle, geliştirme ortamında hızla ayağa kaldır.",
+    "Spring Boot'a spring-boot-starter-data-redis bağımlılığını ekle ve application.yml'de bağlantıyı tanımla.",
+    "Önce Redis olmadan çalışan bir CacheManager stub yaz, ortam hazır olunca gerçek implementasyona geç."
+  ],
+  "recommendedAction": "DevOps ile önce Docker Compose ortamını hazırlayın (tahmini 1 saat), ardından Spring entegrasyonuna geçin."
+}

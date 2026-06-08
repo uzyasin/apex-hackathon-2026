@@ -1,0 +1,48 @@
+{
+  "parentKey": "PROJ-201",
+  "parentSummary": "Kullanıcı şifre sıfırlama e-posta akışı",
+  "subtasks": [
+    {
+      "tempId": "st1",
+      "title": "Şifre sıfırlama token üretimi ve DB kaydı",
+      "discipline": "BACKEND",
+      "estimateHours": 4,
+      "description": "UUID token üret, kullanıcıya bağla, 24 saatlik TTL ile password_reset_tokens tablosuna kaydet."
+    },
+    {
+      "tempId": "st2",
+      "title": "POST /api/auth/forgot-password endpoint",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "description": "E-posta adresi alır, kullanıcıyı doğrular, token üretip e-posta gönderim servisini tetikler."
+    },
+    {
+      "tempId": "st3",
+      "title": "POST /api/auth/reset-password endpoint",
+      "discipline": "BACKEND",
+      "estimateHours": 3,
+      "description": "Token doğrular, süresi dolmuşsa 400 döner, geçerliyse şifreyi günceller ve token'ı geçersiz kılar."
+    },
+    {
+      "tempId": "st4",
+      "title": "password_reset_tokens tablosu migrasyonu",
+      "discipline": "DB",
+      "estimateHours": 2,
+      "description": "id, user_id (FK), token (unique), expires_at, used (bool) alanları ile tablo oluştur."
+    },
+    {
+      "tempId": "st5",
+      "title": "Şifre sıfırlama formu UI bileşeni",
+      "discipline": "FRONTEND",
+      "estimateHours": 4,
+      "description": "E-posta giriş ekranı, başarı mesajı ve yeni şifre giriş ekranı (token URL param üzerinden)."
+    },
+    {
+      "tempId": "st6",
+      "title": "Şifre sıfırlama akışı e2e testi",
+      "discipline": "TEST",
+      "estimateHours": 3,
+      "description": "Geçerli token, süresi dolmuş token ve yanlış token senaryolarını kapsa."
+    }
+  ]
+}

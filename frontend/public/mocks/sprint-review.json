@@ -1,0 +1,19 @@
+{
+  "sprintId": 101,
+  "headline": "Ödeme altyapısını ve kullanıcı profil yönetimini production'a taşıdık",
+  "summary": "Sprint 12'de ödeme akışını uçtan uca tamamladık: Stripe entegrasyonu, checkout formu ve sipariş DB altyapısı canlıya alındı. Kullanıcılar artık kredi kartıyla ödeme yapabiliyor. Paralelde profil güncelleme ve fotoğraf yükleme özellikleri de teslim edildi. Sadece E2E test görevi sürece yetişemedi, Sprint 13'e taşındı.",
+  "achievements": [
+    "Stripe API entegrasyonu ve 3D-Secure akışı tamamlandı",
+    "Checkout formu kullanıcıya açıldı",
+    "Kullanıcı profil güncelleme (ad, soyad, telefon, fotoğraf) canlıda",
+    "Orders veritabanı şeması ve migrasyonu hazır",
+    "24 / 26 story point (%92) teslim edildi"
+  ],
+  "demoScript": [
+    "1. Tarayıcıda ürün listesini açın, bir ürün seçip sepete ekleyin.",
+    "2. Checkout sayfasına geçin ve test kartı bilgilerini girin (4242 4242 4242 4242).",
+    "3. Ödeme Yap butonuna tıklayın, Stripe 3D-Secure sayfasını gösterin.",
+    "4. Onayın ardından sipariş onay sayfasının açıldığını gösterin.",
+    "5. Kullanıcı profiline gidin, isim değiştirin ve fotoğraf yükleyin, kaydedildiğini gösterin."
+  ]
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "memberId": "u1",
+    "name": "Ali",
+    "skills": {
+      "FRONTEND": 4,
+      "BACKEND": 2,
+      "DB": 3,
+      "TEST": 2,
+      "DEVOPS": 1
+    },
+    "capacityHours": 60,
+    "currentLoadHours": 18
+  },
+  {
+    "memberId": "u2",
+    "name": "Veli",
+    "skills": {
+      "FRONTEND": 2,
+      "BACKEND": 5,
+      "DB": 4,
+      "TEST": 2,
+      "DEVOPS": 3
+    },
+    "capacityHours": 60,
+    "currentLoadHours": 24
+  },
+  {
+    "memberId": "u3",
+    "name": "Ayşe",
+    "skills": {
+      "FRONTEND": 5,
+      "BACKEND": 1,
+      "DB": 1,
+      "TEST": 4,
+      "DEVOPS": 0
+    },
+    "capacityHours": 40,
+    "currentLoadHours": 8
+  },
+  {
+    "memberId": "u4",
+    "name": "Can",
+    "skills": {
+      "FRONTEND": 1,
+      "BACKEND": 3,
+      "DB": 5,
+      "TEST": 3,
+      "DEVOPS": 4
+    },
+    "capacityHours": 60,
+    "currentLoadHours": 30
+  },
+  {
+    "memberId": "u5",
+    "name": "Zeynep",
+    "skills": {
+      "FRONTEND": 3,
+      "BACKEND": 4,
+      "DB": 2,
+      "TEST": 5,
+      "DEVOPS": 2
+    },
+    "capacityHours": 40,
+    "currentLoadHours": 10
+  }
+]

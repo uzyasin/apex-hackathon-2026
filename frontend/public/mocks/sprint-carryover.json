@@ -1,0 +1,15 @@
+{
+  "sprintId": 101,
+  "carriedOverCount": 1,
+  "carriedOverPoints": 2,
+  "items": [
+    {
+      "key": "PROJ-186",
+      "summary": "E2E test: ödeme akışı",
+      "storyPoints": 2,
+      "sprintsSpilled": 1,
+      "lastSprintName": "Sprint 12",
+      "reason": "Sprint sonunda tamamlanamadı, Sprint 13'e taşındı."
+    }
+  ]
+}

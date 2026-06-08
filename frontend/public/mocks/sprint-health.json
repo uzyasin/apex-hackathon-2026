@@ -1,0 +1,36 @@
+{
+  "sprintId": 101,
+  "score": 82,
+  "grade": "B+",
+  "factors": [
+    {
+      "name": "Tamamlanma Oranı",
+      "value": 92,
+      "weight": 0.40,
+      "impact": "positive",
+      "detail": "24/26 puan teslim edildi"
+    },
+    {
+      "name": "Taşma (Carryover)",
+      "value": 92,
+      "weight": 0.25,
+      "impact": "positive",
+      "detail": "Sadece 1 görev taşındı (2 puan)"
+    },
+    {
+      "name": "Velocity Tutarlılığı",
+      "value": 70,
+      "weight": 0.20,
+      "impact": "neutral",
+      "detail": "Son 4 sprintte hafif dalgalanma var"
+    },
+    {
+      "name": "Kapsam Değişimi",
+      "value": 60,
+      "weight": 0.15,
+      "impact": "negative",
+      "detail": "Sprint ortasında 1 görev eklendi"
+    }
+  ],
+  "summary": "Güçlü bir sprint. Ödeme altyapısı zamanında teslim edildi. Velocity tutarlılığı ve mid-sprint scope change hafifçe skor düşürdü."
+}
