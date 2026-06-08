@@ -6,6 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+/**
+ * POST /api/analyze AI çıktı şeması (genel sprint analizi).
+ * AI uzmanı sahibi — şema değişirse burası ve AiService.ANALYZE_PROMPT birlikte güncellenir.
+ */
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -71,3 +75,4 @@ public class AiResult {
         private String suggestedAssignee;
     }
 }
+
